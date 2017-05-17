@@ -13,10 +13,6 @@ describe('config parser', function() {
       use: sinon.spy()
     };
     pipelinesLoader.bootstrap(app, {
-      apiEndpoints: {
-        foo: { path: '/foo' },
-        bar: { path: '/bar' }
-      },
       serviceEndpoints: {
         backend: {
           url: 'http://www.example.com'
@@ -25,7 +21,8 @@ describe('config parser', function() {
       pipelines: [{
         name: 'pipeline1',
         apiEndpoints: [
-          'foo', 'bar'
+          { path: '/foo' },
+          { path: '/bar' }
         ],
         policies: [{
             condition: ['always'],
