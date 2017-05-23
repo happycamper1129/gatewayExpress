@@ -1,7 +1,8 @@
 {
   "apiEndpoints": {
     "api": {
-      "host": "*.com"
+      "host": "*.com",
+      "path": "/"
     }
   },
   "serviceEndpoints": {
