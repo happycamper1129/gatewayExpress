@@ -51,10 +51,7 @@ module.exports = function(config) {
     })
   }
 
-
-  function get(_token) {
-    let tokenId = _token.split('|')[0];
-    
+  function get(tokenId) {
     return tokenDao.get(tokenId)
     .then(token => {
       if (!token) {
