@@ -13,11 +13,13 @@ module.exports = function(config) {
   tokenDbConfig = config.tokens.redis;
 
   function save(token) {
+    let consumerId = token.username ? token.username : token.applicationId;
+
     // key for the token hash table
     let redisTokenKey = tokenDbConfig.tokenHashPrefix.concat(':', token.id);
 
     // key for the consumer-tokens hash table
-    let consumerTokensHashKey = tokenDbConfig.consumerTokensHashPrefix.concat(':', token.consumerId);
+    let consumerTokensHashKey = tokenDbConfig.consumerTokensHashPrefix.concat(':', consumerId);
 
     return db
     .multi()
@@ -28,7 +30,9 @@ module.exports = function(config) {
   }
 
   function find(tokenObj) {
-    return db.hgetallAsync(tokenDbConfig.consumerTokensHashPrefix.concat(':', tokenObj.consumerId))
+    let consumerId = tokenObj.username ? tokenObj.username : tokenObj.applicationId;
+
+    return db.hgetallAsync(tokenDbConfig.consumerTokensHashPrefix.concat(':', consumerId))
     .then((tokenIds) => {
       let tokenPromises, activeTokenIds, foundToken;
       let expiredTokenIds = [];
@@ -75,7 +79,7 @@ module.exports = function(config) {
 
         expiredTokenIds.forEach((id) => {
           removeExpiredTokensPromises.push(db.delAsync(tokenDbConfig.tokenHashPrefix.concat(':', id)));
-          removeExpiredTokensPromises.push(db.hdelAsync(tokenDbConfig.consumerTokensHashPrefix.concat(':', tokenObj.consumerId), id));
+          removeExpiredTokensPromises.push(db.hdelAsync(tokenDbConfig.consumerTokensHashPrefix.concat(':', consumerId), id));
         });
 
         return Promise.all(removeExpiredTokensPromises);
