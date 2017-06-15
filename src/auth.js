@@ -14,29 +14,23 @@ module.exports = function (config) {
 
   function authenticateCredential (id, password, type) {
     if (!id || !password || !type) {
-      return Promise.resolve(false);
+      return false;
     }
-    return validateConsumer(id, { checkUsername: true })
+    return validateConsumer(id)
     .then((consumer) => {
       if (!consumer) {
         return false;
-      }
-
-      return credentials.getCredential(id, type, { includePassword: true })
-      .then(credential => {
-        if (!credential || !credential.isActive) {
-          return false;
-        }
-
-        return utils.compareSaltAndHashed(password, credential[config.credentials.types[type]['passwordKey']])
-        .then(authenticated => {
-          if (!authenticated) {
-            return false;
-          }
-
-          return consumer;
+      } else {
+        return credentials.getCredential(id, type, { includePassword: true })
+        .then(_credential => {
+          if (_credential && _credential.isActive) {
+            return utils.compareSaltAndHashed(password, _credential[config.credentials.types[type]['passwordKey']])
+            .then(authenticated => {
+              return authenticated ? consumer : false;
+            });
+          } else return false;
         });
-      });
+      }
     });
   }
 
@@ -52,7 +46,9 @@ module.exports = function (config) {
         return null;
       }
 
-      return validateConsumer(tokenObj.consumerId);
+      if (tokenObj.username) {
+        return users.find(tokenObj.username);
+      } else return applications.get(tokenObj.applicationId);
     })
     .then(consumer => {
       if (!consumer || !consumer.isActive) {
@@ -63,7 +59,7 @@ module.exports = function (config) {
 
   function authorizeToken (_token, authType, scopes) {
     if (!scopes || scopes.length === 0) {
-      return Promise.resolve(true);
+      return true;
     }
 
     scopes = Array.isArray(scopes) ? scopes : [ scopes ];
@@ -84,45 +80,49 @@ module.exports = function (config) {
 
   function authorizeCredential (id, authType, scopes) {
     if (!scopes || !scopes.length) {
-      return Promise.resolve(true);
+      return true;
     }
 
     return credentials.getCredential(id, authType)
-    .then(credential => {
-      if (credential) {
-        if (!credential.scopes) {
+    .then(_credential => {
+      if (_credential) {
+        if (!_credential.scopes) {
           return false;
         }
-        return scopes.every(scope => credential.scopes.indexOf(scope) !== -1);
+        return scopes.every(scope => _credential.scopes.indexOf(scope) !== -1);
       }
     });
   }
 
-  function validateConsumer (id, options) {
+  function validateConsumer (id) {
     return applications.get(id)
     .then(app => {
-      if (app && app.isActive) {
+      if (app) {
+        if (!app.isActive) {
+          return null;
+        }
         return createApplicationObject(app);
+      } else {
+        return users.find(id)
+        .then(user => {
+          if (user) {
+            if (!user.isActive) {
+              return null;
+            }
+            return createUserObject(user);
+          } else {
+            return users.get(id)
+            .then(_user => {
+              if (_user) {
+                if (!_user.isActive) {
+                  return null;
+                }
+                return createUserObject(_user);
+              } else return null;
+            });
+          }
+        });
       }
-
-      return users.get(id)
-      .then(_user => {
-        if (_user && _user.isActive) {
-          return createUserObject(_user);
-        }
-
-        if (options.checkUsername) {
-          let username = id;
-          return users.find(username)
-          .then(user => {
-            if (user && user.isActive) {
-              return createUserObject(user);
-            } else return null;
-          });
-        }
-
-        return null;
-      });
     });
   }
 

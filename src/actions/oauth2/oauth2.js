@@ -26,14 +26,12 @@ const server = oauth2orize.createServer();
 // simple matter of serializing the client's ID, and deserializing by finding
 // the client by ID from the database.
 
-server.serializeClient((consumer, done) => done(null, consumer));
+server.serializeClient((consumer, done) => done(null, consumer.id));
 
-server.deserializeClient((consumer, done) => {
-  let id = consumer.id;
-
+server.deserializeClient((id, done) => {
   return authService.validateConsumer(id)
-  .then(foundConsumer => {
-    if (!foundConsumer) return done(null, false);
+  .then(consumer => {
+    if (!consumer) return done(null, false);
     return done(null, consumer);
   })
   .catch(err => done(err));
@@ -60,8 +58,6 @@ server.grant(oauth2orize.grant.code((consumer, redirectUri, user, ares, done) =>
     userId: user.id
   };
 
-  if (consumer.authorizedScopes) code.scopes = consumer.authorizedScopes;
-
   return authCodeService.save(code)
   .then((codeObj) => {
     return done(null, codeObj.id);
@@ -77,13 +73,17 @@ server.grant(oauth2orize.grant.code((consumer, redirectUri, user, ares, done) =>
 
 server.grant(oauth2orize.grant.token((consumer, authenticatedUser, ares, done) => {
   let tokenCriteria = {
-    consumerId: consumer.id,
-    authenticatedUserId: authenticatedUser.id,
-    redirectUri: consumer.redirectUri,
-    authType: 'oauth'
+    authenticatedUser: authenticatedUser.id,
+    redirectUri: consumer.redirectUri
   };
 
-  if (consumer.authorizedScopes) tokenCriteria.scopes = consumer.authorizedScopes;
+  if (!consumer.username) {
+    tokenCriteria.applicationId = consumer.id;
+  } else {
+    tokenCriteria.username = consumer.id;
+  }
+
+  consumer.authenticatedUserId = authenticatedUser.id;
 
   return tokenService.findOrSave(tokenCriteria)
   .then(token => {
@@ -112,9 +112,7 @@ server.exchange(oauth2orize.exchange.code((consumer, code, redirectUri, done) =>
     }
 
     let tokenCriteria = {
-      consumerId: consumer.id,
-      authenticatedUser: codeObj.userId,
-      authType: 'oauth'
+      authenticatedUser: codeObj.userId
     };
 
     if (codeObj.scopes) tokenCriteria.scopes = codeObj.scopes;
@@ -153,7 +151,6 @@ server.exchange(oauth2orize.exchange.password((consumer, username, password, sco
         if (!authorized) return done(null, false);
 
         let tokenCriteria = {
-          consumerId: consumer.id,
           authenticatedUser: user.id
         };
 
@@ -190,10 +187,7 @@ server.exchange(oauth2orize.exchange.clientCredentials((consumer, scopes, done) 
       .then(authorized => {
         if (!authorized) return done(null, false);
 
-        let tokenCriteria = {
-          consumerId: consumer.id,
-          authType: 'oauth'
-        };
+        let tokenCriteria = {};
 
         if (scopes) tokenCriteria.scopes = scopes;
 
@@ -224,25 +218,11 @@ server.exchange(oauth2orize.exchange.clientCredentials((consumer, scopes, done) 
 
 module.exports.authorization = [
   login.ensureLoggedIn(),
-  server.authorization((areq, done) => {
-    return authService.validateConsumer(areq.clientID)
+  server.authorization((consumerId, redirectUri, done) => {
+    return authService.validateConsumer(consumerId)
     .then(consumer => {
-      if (!consumer || consumer.redirectUri !== areq.redirectURI) return done(null, false);
-
-      if (!areq.scope) {
-        return done(null, consumer, areq.redirectURI);
-      }
-
-      return authService.authorizeCredential(areq.clientID, 'oauth', areq.scope)
-      .then(authorized => {
-        if (!authorized) {
-          return done(null, false);
-        }
-
-        consumer.authorizedScopes = areq.scope;
-
-        return done(null, consumer, areq.redirectURI);
-      });
+      if (!consumer || consumer.redirectUri !== redirectUri) return done(null, false);
+      return done(null, consumer, redirectUri);
     });
   }),
   (request, response) => {
