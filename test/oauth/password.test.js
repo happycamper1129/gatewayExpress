@@ -1,34 +1,45 @@
+let mock = require('mock-require');
+mock('redis', require('fakeredis'));
+
 let session = require('supertest-session');
 let should = require('should');
 let app = require('./bootstrap');
-let request = session(app);
 let Promise = require('bluebird');
 
-let config = require('../config.models.js');
-let db = require('../../src/db').getDb();
-
-let credentialService, userService, applicationService;
+let credentialModelConfig = require('../../src/config/models/credentials');
+let userModelConfig = require('../../src/config/models/users');
+let appModelConfig = require('../../src/config/models/applications');
+let services = require('../../src/services');
+let credentialService = services.credential;
+let userService = services.user;
+let applicationService = services.application;
+let tokenService = services.token;
+let db = require('../../src/db')();
 
 describe('Functional Test Client Password grant', function () {
-  let originalAppConfig, originalOauthConfig;
+  let originalAppConfig, originalCredentialConfig, originalUserConfig;
   let fromDbUser1, fromDbApp;
 
   before(function (done) {
-    originalAppConfig = config.applications;
-    originalOauthConfig = config.credentials.types.oauth;
+    originalAppConfig = appModelConfig;
+    originalCredentialConfig = credentialModelConfig;
+    originalUserConfig = userModelConfig;
 
-    config.applications.properties = {
+    appModelConfig.properties = {
       name: { isRequired: true, isMutable: true },
       redirectUri: { isRequired: true, isMutable: true }
     };
 
-    config.credentials.types.oauth = {
-      passwordKey: 'secret'
+    credentialModelConfig.oauth = {
+      passwordKey: 'secret',
+      properties: { scopes: { isRequired: false } }
     };
 
-    credentialService = require('../../src/credentials/credential.service.js')(config);
-    userService = require('../../src/consumers/user.service.js')(config);
-    applicationService = require('../../src/consumers/application.service.js')(config);
+    userModelConfig.properties = {
+      firstname: {isRequired: true, isMutable: true},
+      lastname: {isRequired: true, isMutable: true},
+      email: {isRequired: false, isMutable: true}
+    };
 
     db.flushdbAsync()
     .then(function (didSucceed) {
@@ -66,13 +77,16 @@ describe('Functional Test Client Password grant', function () {
           should.exist(_fromDbApp);
           fromDbApp = _fromDbApp;
 
-          return Promise.all([ credentialService.insertCredential(fromDbUser1.username, 'oauth', { secret: 'user-secret' }),
-            credentialService.insertCredential(fromDbApp.id, 'oauth', { secret: 'app-secret' }) ])
+          credentialService.insertScopes('someScope')
+          .then(() => {
+            Promise.all([ credentialService.insertCredential(fromDbUser1.username, 'oauth', { secret: 'user-secret' }),
+              credentialService.insertCredential(fromDbApp.id, 'oauth', { secret: 'app-secret', scopes: [ 'someScope' ] }) ])
             .spread((userRes, appRes) => {
               should.exist(userRes);
               should.exist(appRes);
               done();
             });
+          });
         });
       });
     })
@@ -83,12 +97,14 @@ describe('Functional Test Client Password grant', function () {
   });
 
   after((done) => {
-    config.applications = originalAppConfig;
-    config.credentials.types.oauth = originalOauthConfig;
+    appModelConfig.properties = originalAppConfig.properties;
+    credentialModelConfig.oauth = originalCredentialConfig.oauth;
+    userModelConfig.properties = originalUserConfig.properties;
     done();
   });
 
-  it('should grant access token', function (done) {
+  it('should grant access token when no scopes are specified', function (done) {
+    let request = session(app);
     let credentials = Buffer.from(fromDbApp.id.concat(':app-secret')).toString('base64');
 
     request
@@ -108,6 +124,60 @@ describe('Functional Test Client Password grant', function () {
       should.exist(token);
       should.exist(token.access_token);
       token.token_type.should.equal('Bearer');
+      done();
+    });
+  });
+
+  it('should grant access token with authorized scopes', function (done) {
+    let request = session(app);
+    let credentials = Buffer.from(fromDbApp.id.concat(':app-secret')).toString('base64');
+
+    request
+    .post('/oauth2/token')
+    .set('Authorization', 'basic ' + credentials)
+    .set('content-type', 'application/x-www-form-urlencoded')
+    .type('form')
+    .send({
+      grant_type: 'password',
+      username: 'irfanbaqui',
+      password: 'user-secret',
+      scope: 'someScope'
+    })
+    .expect(200)
+    .end(function (err, res) {
+      should.not.exist(err);
+      let token = res.body;
+      should.exist(token);
+      should.exist(token.access_token);
+      token.token_type.should.equal('Bearer');
+      tokenService.get(token.access_token)
+        .then(fromDbToken => {
+          should.exist(fromDbToken);
+          fromDbToken.scopes.should.eql([ 'someScope' ]);
+          [ fromDbToken.id, fromDbToken.tokenDecrypted ].should.eql(token.access_token.split('|'));
+          done();
+        });
+    });
+  });
+
+  it('should not grant access token with unauthorized scopes', function (done) {
+    let request = session(app);
+    let credentials = Buffer.from(fromDbApp.id.concat(':app-secret')).toString('base64');
+
+    request
+    .post('/oauth2/token')
+    .set('Authorization', 'basic ' + credentials)
+    .set('content-type', 'application/x-www-form-urlencoded')
+    .type('form')
+    .send({
+      grant_type: 'password',
+      username: 'irfanbaqui',
+      password: 'user-secret',
+      scope: 'someScope unauthorizedScope'
+    })
+    .expect(401)
+    .end(function (err) {
+      should.not.exist(err);
       done();
     });
   });
