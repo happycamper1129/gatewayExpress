@@ -4,17 +4,12 @@ const assert = require('chai').assert;
 const logger = require('../../src/log').test;
 let gateway = require('../../src/gateway');
 const _ = require('lodash');
-let config = require('../../src/config');
 
 module.exports = function () {
-  let app, httpsApp, originalGatewayConfig;
+  let app, httpsApp;
   return {
     setup: testSuite => () => {
       let actions = require('../../src/actions').init();
-      if (testSuite && testSuite.gatewayConfig) {
-        originalGatewayConfig = config.gatewayConfig;
-        config.gatewayConfig = testSuite.gatewayConfig;
-      }
       testSuite && testSuite.fakeActions && testSuite.fakeActions.forEach((key) => {
         actions.register(key, (params) => {
           return (req, res) => {
@@ -31,9 +26,6 @@ module.exports = function () {
         });
     },
     cleanup: () => {
-      if (originalGatewayConfig) {
-        config.gatewayConfig = originalGatewayConfig;
-      }
       app && app.close();
       httpsApp && httpsApp.close();
     },
@@ -59,24 +51,6 @@ module.exports = function () {
           .expect('Content-Type', /text\/html/)
           .end((err, res) => {
             if (err) { logger.error(res.body); }
-            err ? done(err) : done();
-          });
-      };
-    },
-    validateOptions: (testCase) => {
-      return (done) => {
-        let testScenario = request(app).options(testCase.setup.url);
-
-        if (testCase.setup.host) {
-          testScenario.set('Host', testCase.setup.host);
-        }
-        if (testCase.test.headers) {
-          for (let [ header, value ] of Object.entries(testCase.test.headers)) {
-            testScenario.expect(header, value);
-          }
-        }
-        testScenario.expect(204)
-          .end((err, res) => {
             err ? done(err) : done();
           });
       };
