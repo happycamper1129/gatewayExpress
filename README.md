@@ -490,7 +490,7 @@ pipelines:
             serviceEndpoint: example # reference to serviceEndpoints Section
 ```
 
-#### CORS (TODO:Update doc, non relevant)
+#### CORS
 
 Provides [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 support via the [cors](https://www.npmjs.com/package/cors) node package. The
@@ -499,17 +499,28 @@ details.
 
 Example:
 
-```json
+```yml
 ...
-"policies": {
-  "cors":[{
-    "condition": {"name":"always"},
-    "action": { "name":"cors",
-                "origin": ["http://www.example.com"],
-                "credentials": true
-    }
-  }]
+policies:
+  - cors:
+      -
+        action:
+          name: cors
+          origin: http://www.example.com
+          credentials: true
 }
+```
+
+#### Expression
+Execute JS code against EGContext.
+```yml
+pipelines:
+  api:
+    policies:
+      expression: # policy name
+        - action:    # array of condition/actions objects
+            name: expression # action name
+            jscode: 'req.url = "/new/url"; ' #  code to execute against EG Context
 ```
 
 #### Logging
