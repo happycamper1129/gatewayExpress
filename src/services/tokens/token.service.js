@@ -56,10 +56,10 @@ s.find = function (tokenObj) {
   });
 };
 
-s.get = function (_token, options) {
+s.get = function (_token) {
   let tokenId = _token.split('|')[0];
 
-  return tokenDao.get(tokenId, options)
+  return tokenDao.get(tokenId)
   .then(token => {
     if (!token) {
       return null;
@@ -74,10 +74,6 @@ s.get = function (_token, options) {
 
     return token;
   });
-};
-
-s.getTokensByConsumer = function (id, options) {
-  return tokenDao.getTokensByConsumer(id, options);
 };
 
 function formToken (tokenObj) {

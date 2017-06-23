@@ -7,15 +7,14 @@ let config = require('../../config');
 let dao = {};
 
 const tokenNamespace = 'token';
-const consumerTokensPrefix = 'consumer-tokens';
-const consumerTokensExpiredPrefix = 'consumer-tokens-expired';
+const consumerTokensPerfix = 'consumer-tokens';
 
 dao.save = function (token) {
   // key for the token hash table
   let redisTokenKey = config.systemConfig.db.redis.namespace.concat('-', tokenNamespace).concat(':', token.id);
 
   // key for the consumer-tokens hash table
-  let consumerTokensHashKey = config.systemConfig.db.redis.namespace.concat('-', consumerTokensPrefix).concat(':', token.consumerId);
+  let consumerTokensHashKey = config.systemConfig.db.redis.namespace.concat('-', consumerTokensPerfix).concat(':', token.consumerId);
 
   return db
   .multi()
@@ -26,11 +25,9 @@ dao.save = function (token) {
 };
 
 dao.find = function (tokenObj) {
-  let foundToken;
-
-  return db.hgetallAsync(config.systemConfig.db.redis.namespace.concat('-', consumerTokensPrefix).concat(':', tokenObj.consumerId))
+  return db.hgetallAsync(config.systemConfig.db.redis.namespace.concat('-', consumerTokensPerfix).concat(':', tokenObj.consumerId))
   .then((tokenIds) => {
-    let tokenPromises, activeTokenIds, getTokenPromise;
+    let tokenPromises, activeTokenIds, foundToken;
     let expiredTokenIds = [];
 
     if (!tokenIds || Object.keys(tokenIds).length === 0) {
@@ -59,100 +56,43 @@ dao.find = function (tokenObj) {
       });
     });
 
-    if (tokenPromises.length === 0) {
-      getTokenPromise = Promise.resolve(null);
-    } else getTokenPromise = Promise.some(tokenPromises, 1);
-
-    return getTokenPromise
-    .then((token) => {
-      foundToken = token[0];
+    return Promise.some(tokenPromises, 1)
+    .spread((token) => {
+      foundToken = token;
     })
     .catch(() => null)
     .then(() => {
-      let tokenTransaction = db.multi();
+      let removeExpiredTokensPromises = [];
 
       if (expiredTokenIds.length === 0) {
         return;
       }
 
       expiredTokenIds.forEach((id) => {
-        tokenTransaction = tokenTransaction.hset(config.systemConfig.db.redis.namespace.concat('-', tokenNamespace).concat(':', id), 'archived', 'true');
-        tokenTransaction = tokenTransaction.hdel(config.systemConfig.db.redis.namespace.concat('-', consumerTokensPrefix).concat(':', tokenObj.consumerId), id);
-        tokenTransaction = tokenTransaction.hset(config.systemConfig.db.redis.namespace.concat('-', consumerTokensExpiredPrefix).concat(':', tokenObj.consumerId), id, 'true');
+        removeExpiredTokensPromises.push(config.systemConfig.db.redis.namespace.concat('-', tokenNamespace).concat(':', id));
+        removeExpiredTokensPromises.push(db.hdelAsync(config.systemConfig.db.redis.namespace.concat('-', consumerTokensPerfix).concat(':', tokenObj.consumerId), id));
       });
 
-      return tokenTransaction.execAsync();
+      return Promise.all(removeExpiredTokensPromises);
     })
     .then(() => foundToken);
   });
 };
 
-dao.get = function (tokenId, options) {
-  options = options || {};
-
+dao.get = function (tokenId) {
   return db.hgetallAsync(config.systemConfig.db.redis.namespace.concat('-', tokenNamespace).concat(':', tokenId))
   .then(token => {
     if (!token) {
       return null;
     }
 
-    if (token.expiresAt > Date.now()) {
-      return token;
+    if (token.expiresAt < Date.now()) {
+      return db.delAsync(config.systemConfig.db.redis.namespace.concat('-', tokenNamespace).concat(':', tokenId))
+      .return(null);
     }
 
-    if (token.archived) {
-      if (options.includeExpired) {
-        return token;
-      } else return null;
-    }
-
-    return db
-      .multi()
-      .hset(config.systemConfig.db.redis.namespace.concat('-', tokenNamespace).concat(':', token.id), 'archived', 'true')
-      .hdel(config.systemConfig.db.redis.namespace.concat('-', consumerTokensPrefix).concat(':', token.consumerId), token.id)
-      .hset(config.systemConfig.db.redis.namespace.concat('-', consumerTokensExpiredPrefix).concat(':', token.consumerId), token.id, 'true')
-      .execAsync()
-      .then(() => {
-        if (options.includeExpired) {
-          return token;
-        } else return null;
-      });
+    return token;
   });
-};
-
-dao.getTokensByConsumer = function (id, options) {
-  options = options || {};
-
-  let getIds = db.multi().hgetall(config.systemConfig.db.redis.namespace.concat('-', consumerTokensPrefix).concat(':', id));
-
-  if (options.includeExpired) {
-    getIds = getIds.hgetall(config.systemConfig.db.redis.namespace.concat('-', consumerTokensExpiredPrefix).concat(':', id));
-  }
-
-  return getIds
-    .execAsync()
-    .then((tokensArr) => {
-      let tokens = tokensArr[0];
-      let expiredTokens = tokensArr[1];
-
-      let tokenPromises = [];
-
-      if (!tokens && !expiredTokens) {
-        return null;
-      }
-
-      tokens = Object.keys(tokens || {});
-      expiredTokens = Object.keys(expiredTokens || {});
-
-      tokens.concat(expiredTokens).forEach(tokenId => {
-        return tokenPromises.push(this.get(tokenId, options));
-      });
-
-      return Promise.all(tokenPromises)
-        .then(results => {
-          return results.filter(r => !!r);
-        });
-    });
 };
 
 module.exports = dao;
