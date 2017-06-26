@@ -5,25 +5,25 @@
   "homepage": "https://www.express-gateway.io",
   "repository": "expressgateway/express-gateway",
   "keywords": [
-		"microservices",
-		"apis",
-		"api gateway",
-		"rest",
-		"express",
-		"middleware",
-		"endpoints",
-		"policies",
-		"pipelines",
-		"nodejs gateway",
-		"oauth2"
-	],
+    "microservices",
+    "apis",
+    "api gateway",
+    "rest",
+    "express",
+    "middleware",
+    "endpoints",
+    "policies",
+    "pipelines",
+    "nodejs gateway",
+    "oauth2"
+  ],
   "contributors": [
-		"Roman Lisagor <roman@lunchbadger.com>",
-		"Serhii Kuts <serhii@lunchbadger.com>",
-		"Irfan Baqui <irfan@lunchbadger.com>",
-		"Kevin Swiber <kevin@lunchbadger.com>",
-		"Al Tsang <al@lunchbadger.com>"
-	],
+    "Roman Lisagor <roman@lunchbadger.com>",
+    "Serhii Kuts <serhii@lunchbadger.com>",
+    "Irfan Baqui <irfan@lunchbadger.com>",
+    "Kevin Swiber <kevin@lunchbadger.com>",
+    "Al Tsang <al@lunchbadger.com>"
+  ],
   "license": "Apache-2.0",
   "main": "src/index.js",
   "engines": {
