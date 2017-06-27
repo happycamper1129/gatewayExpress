@@ -6,7 +6,9 @@ let should = require('should');
 let app = require('./bootstrap');
 let Promise = require('bluebird');
 
-let config = require('../../lib/config');
+let credentialModelConfig = require('../../lib/config/models/credentials');
+let userModelConfig = require('../../lib/config/models/users');
+let appModelConfig = require('../../lib/config/models/applications');
 let services = require('../../lib/services');
 let credentialService = services.credential;
 let userService = services.user;
@@ -16,24 +18,24 @@ let db = require('../../lib/db')();
 
 describe('Functional Test Client Password grant', function () {
   let originalAppConfig, originalCredentialConfig, originalUserConfig;
-  let fromDbUser1, fromDbApp, refreshToken;
+  let fromDbUser1, fromDbApp;
 
   before(function (done) {
-    originalAppConfig = config.models.applications;
-    originalCredentialConfig = config.models.credentials;
-    originalUserConfig = config.models.users;
+    originalAppConfig = appModelConfig;
+    originalCredentialConfig = credentialModelConfig;
+    originalUserConfig = userModelConfig;
 
-    config.models.applications.properties = {
+    appModelConfig.properties = {
       name: { isRequired: true, isMutable: true },
       redirectUri: { isRequired: true, isMutable: true }
     };
 
-    config.models.credentials.oauth = {
+    credentialModelConfig.oauth = {
       passwordKey: 'secret',
       properties: { scopes: { isRequired: false } }
     };
 
-    config.models.users.properties = {
+    userModelConfig.properties = {
       firstname: {isRequired: true, isMutable: true},
       lastname: {isRequired: true, isMutable: true},
       email: {isRequired: false, isMutable: true}
@@ -95,9 +97,9 @@ describe('Functional Test Client Password grant', function () {
   });
 
   after((done) => {
-    config.models.applications.properties = originalAppConfig.properties;
-    config.models.credentials.oauth = originalCredentialConfig.oauth;
-    config.models.users.properties = originalUserConfig.properties;
+    appModelConfig.properties = originalAppConfig.properties;
+    credentialModelConfig.oauth = originalCredentialConfig.oauth;
+    userModelConfig.properties = originalUserConfig.properties;
     done();
   });
 
@@ -147,10 +149,7 @@ describe('Functional Test Client Password grant', function () {
       let token = res.body;
       should.exist(token);
       should.exist(token.access_token);
-      should.exist(token.refresh_token);
       token.token_type.should.equal('Bearer');
-      refreshToken = token.refresh_token;
-
       tokenService.get(token.access_token)
         .then(fromDbToken => {
           should.exist(fromDbToken);
@@ -159,35 +158,6 @@ describe('Functional Test Client Password grant', function () {
           done();
         });
     });
-  });
-
-  it('should grant access token in exchange of refresh token', function (done) {
-    let request = session(app);
-
-    request
-      .post('/oauth2/token')
-      .set('Content-Type', 'application/json')
-      .send({
-        grant_type: 'refresh_token',
-        client_id: fromDbApp.id,
-        client_secret: 'app-secret',
-        refresh_token: refreshToken
-      })
-      .expect(200)
-      .end((err, res) => {
-        should.not.exist(err);
-        should.exist(res.body.access_token);
-        res.body.access_token.length.should.be.greaterThan(15);
-        should.exist(res.body.token_type);
-        res.body.token_type.should.eql('Bearer');
-        tokenService.get(res.body.access_token)
-          .then(token => {
-            should.exist(token);
-            token.scopes.should.eql([ 'someScope' ]);
-            [ token.id, token.tokenDecrypted ].should.eql(res.body.access_token.split('|'));
-            done();
-          });
-      });
   });
 
   it('should not grant access token with unauthorized scopes', function (done) {

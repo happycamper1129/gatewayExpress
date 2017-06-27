@@ -5,7 +5,9 @@ let session = require('supertest-session');
 let should = require('should');
 let app = require('./bootstrap');
 
-let config = require('../../lib/config');
+let credentialModelConfig = require('../../lib/config/models/credentials');
+let userModelConfig = require('../../lib/config/models/users');
+let appModelConfig = require('../../lib/config/models/applications');
 let services = require('../../lib/services');
 let credentialService = services.credential;
 let userService = services.user;
@@ -18,21 +20,21 @@ describe('Functional Test Client Credentials grant', function () {
   let user, application;
 
   before(function (done) {
-    originalAppConfig = config.models.applications;
-    originalCredentialConfig = config.models.credentials;
-    originalUserConfig = config.models.users;
+    originalAppConfig = appModelConfig;
+    originalCredentialConfig = credentialModelConfig;
+    originalUserConfig = userModelConfig;
 
-    config.models.applications.properties = {
+    appModelConfig.properties = {
       name: { isRequired: true, isMutable: true },
       redirectUri: { isRequired: true, isMutable: true }
     };
 
-    config.models.credentials.oauth = {
+    credentialModelConfig.oauth = {
       passwordKey: 'secret',
       properties: { scopes: { isRequired: false } }
     };
 
-    config.models.users.properties = {
+    userModelConfig.properties = {
       firstname: {isRequired: true, isMutable: true},
       lastname: {isRequired: true, isMutable: true},
       email: {isRequired: false, isMutable: true}
@@ -83,9 +85,9 @@ describe('Functional Test Client Credentials grant', function () {
   });
 
   after((done) => {
-    config.models.applications.properties = originalAppConfig.properties;
-    config.models.credentials.oauth = originalCredentialConfig.oauth;
-    config.models.users.properties = originalUserConfig.properties;
+    appModelConfig.properties = originalAppConfig.properties;
+    credentialModelConfig.oauth = originalCredentialConfig.oauth;
+    userModelConfig.properties = originalUserConfig.properties;
     done();
   });
 

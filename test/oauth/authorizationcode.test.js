@@ -18,7 +18,7 @@ let db = require('../../lib/db')();
 
 describe('Functional Test Authorization Code grant', function () {
   let originalAppConfig, originalCredentialConfig, originalUserConfig;
-  let fromDbUser1, fromDbApp, refreshToken;
+  let fromDbUser1, fromDbApp;
 
   before(function (done) {
     originalAppConfig = config.models.applications;
@@ -169,9 +169,7 @@ describe('Functional Test Authorization Code grant', function () {
               .end(function (err, res) {
                 should.not.exist(err);
                 should.exist(res.body.access_token);
-                should.exist(res.body.refresh_token);
                 res.body.access_token.length.should.be.greaterThan(15);
-                res.body.refresh_token.length.should.be.greaterThan(15);
                 should.exist(res.body.token_type);
                 res.body.token_type.should.eql('Bearer');
                 done();
@@ -244,12 +242,9 @@ describe('Functional Test Authorization Code grant', function () {
               .end(function (err, res) {
                 should.not.exist(err);
                 should.exist(res.body.access_token);
-                should.exist(res.body.refresh_token);
                 res.body.access_token.length.should.be.greaterThan(15);
-                res.body.refresh_token.length.should.be.greaterThan(15);
                 should.exist(res.body.token_type);
                 res.body.token_type.should.eql('Bearer');
-                refreshToken = res.body.refresh_token;
                 tokenService.get(res.body.access_token)
                 .then(token => {
                   should.exist(token);
@@ -261,35 +256,6 @@ describe('Functional Test Authorization Code grant', function () {
             });
           });
         });
-      });
-  });
-
-  it('should grant access token in exchange of refresh token', function (done) {
-    let request = session(app);
-
-    request
-      .post('/oauth2/token')
-      .set('Content-Type', 'application/json')
-      .send({
-        grant_type: 'refresh_token',
-        client_id: fromDbApp.id,
-        client_secret: 'app-secret',
-        refresh_token: refreshToken
-      })
-      .expect(200)
-      .end((err, res) => {
-        should.not.exist(err);
-        should.exist(res.body.access_token);
-        res.body.access_token.length.should.be.greaterThan(15);
-        should.exist(res.body.token_type);
-        res.body.token_type.should.eql('Bearer');
-        tokenService.get(res.body.access_token)
-          .then(token => {
-            should.exist(token);
-            token.scopes.should.eql([ 'someScope' ]);
-            [ token.id, token.tokenDecrypted ].should.eql(res.body.access_token.split('|'));
-            done();
-          });
       });
   });
 
