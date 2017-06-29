@@ -1,7 +1,7 @@
 db:
   redis:
     host: localhost
-    port: 5555
+    port: 6379
     namespace: EG
 crypto:
   cipherKey: sensitiveKey
@@ -12,6 +12,8 @@ session:
   resave: false
   saveUninitialized: false
 access_tokens:
+  timeToExpiry: 7200000
+refresh_tokens:
   timeToExpiry: 7200000
 authorization_codes:
   timeToExpiry: 300000
