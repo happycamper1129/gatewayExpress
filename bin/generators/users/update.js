@@ -80,10 +80,11 @@ module.exports = class extends eg.Generator {
           return;
         }
 
-        const configProperties = config.users.properties;
-        let missingProperties = Object.keys(configProperties).map(prop => {
-          return { name: prop, descriptor: configProperties[prop] };
-        });
+        let missingProperties = [];
+        for (const [prop, descriptor] of
+              Object.entries(config.users.properties)) {
+          missingProperties.push({ name: prop, descriptor: descriptor });
+        }
 
         let questions = [];
 
