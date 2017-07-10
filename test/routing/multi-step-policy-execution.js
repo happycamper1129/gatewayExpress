@@ -1,7 +1,7 @@
 let mock = require('mock-require');
 mock('redis', require('fakeredis'));
 
-let testHelper = require('./routing.helper');
+let testHelper = require('../common/routing.helper');
 let config = require('../../lib/config');
 let sinon = require('sinon');
 let assert = require('assert');
@@ -40,7 +40,7 @@ describe('default config with multi step (multi action) policy', () => {
                 action: { param: 3 }
               }]
             },
-            { 'test-return': null }
+            { 'test-return': {} }
           ]
         }
       }
