@@ -39,10 +39,6 @@
     "test-all": "cross-env EG_CONFIG_DIR=test/config EG_DISABLE_CONFIG_WATCH=true mocha --recursive test --timeout 60000",
     "test:unit": "cross-env EG_CONFIG_DIR=test/config EG_DISABLE_CONFIG_WATCH=true mocha --recursive \"./test/{,!(e2e)/**/}*.test.js\" --timeout 5000",
     "test:e2e": "mocha --recursive test/e2e --timeout 60000",
-    "docker:create": "docker build -t expressgateway/express-gateway:v$npm_package_version --build-arg VERSION=$npm_package_version - < Dockerfile",
-    "docker-gs:create": "docker build -t expressgateway/express-gateway:v${npm_package_version}-getting-started --build-arg VERSION=$npm_package_version --build-arg TYPE=getting-started - < Dockerfile",
-    "docker:publish": "docker push expressgateway/express-gateway:v$npm_package_version",
-    "docker-gs:publish": "docker push expressgateway/express-gateway:v${npm_package_version}-getting-started",
     "mocha-istanbul": "nyc --reporter=lcov npm run test-all && nyc report --report=lcov > coverage.lcov && codecov"
   },
   "bin": {
@@ -75,6 +71,7 @@
     "has-flag": "2.0.0",
     "http-proxy": "1.16.2",
     "js-yaml": "^3.10.0",
+    "migrate": "^1.0.0-2",
     "minimatch": "^3.0.4",
     "oauth2orize": "^1.10.0",
     "parent-require": "^1.0.0",
