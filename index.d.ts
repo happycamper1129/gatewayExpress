@@ -1,6 +1,6 @@
 import express = require("express");
 import { EventEmitter } from "events";
-import { JSONSchema6 } from "json-schema";
+import { JSONSchema4 } from "json-schema";
 
 declare global {
   namespace Express {
@@ -13,13 +13,13 @@ declare global {
     interface Policy {
       name: string,
       policy(actionParams): express.RequestHandler,
-      schema?: JSONSchema6
+      schema?: JSONSchema4
     }
 
     interface Condition {
       name: string,
       handler(req: express.Request, conditionConfig): boolean,
-      schema?: JSONSchema6
+      schema?: JSONSchema4
     }
 
     interface PluginContext {
@@ -35,7 +35,7 @@ declare global {
       version?: string,
       policies?: Array<string>,
       init(context: PluginContext): void,
-      schema?: JSONSchema6
+      schema?: JSONSchema4
     }
   }
 }

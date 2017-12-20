@@ -92,7 +92,6 @@ describe('gateway policy schema with plugins', () => {
         policies: [{
           name: 'test-policy',
           schema: {
-            $id: 'http://express-gateway.io/schemas/policies/test-policy.json',
             type: 'object',
             properties: {
               p1: { type: ['number'] }
@@ -115,17 +114,9 @@ describe('gateway policy schema with plugins', () => {
     });
   });
 
-  it('should throw on policy schema validation', function () {
+  it('should fail on policy schema validation', function () {
     config.gatewayConfig.policies.push('test-policy-2');
-    config.gatewayConfig.pipelines.pipeline1.policies.push({
-      'test-policy-2': [
-        {
-          action: {}
-        }
-      ]
-    }
-    );
-    return assert.throws(() => gateway({
+    return gateway({
       plugins: {
         policies: [{
           name: 'test-policy-2',
@@ -142,6 +133,10 @@ describe('gateway policy schema with plugins', () => {
         }]
       },
       config
-    }));
+    }).then(srv => {
+      helper.setupApp(srv.app);
+      gatewaySrv = srv.app;
+      return srv;
+    });
   });
 });

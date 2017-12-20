@@ -84,7 +84,6 @@ describe('gateway condition schema with plugins', () => {
         conditions: [{
           name: 'test-condition-1',
           schema: {
-            $id: 'http://express-gateway.io/schemas/conditions/test-condition-1.json',
             type: 'object',
             properties: {
               param1: { type: ['boolean'] }
@@ -107,13 +106,12 @@ describe('gateway condition schema with plugins', () => {
     });
   });
 
-  it('should throw on condition schema validation', () => {
+  it('should fail on condition schema validation', () => {
     return gateway({
       plugins: {
         conditions: [{
           name: 'test-condition-2',
           schema: {
-            $id: 'http://express-gateway.io/schemas/conditions/test-policy.json',
             type: 'object',
             properties: {
               param2: { type: ['string'] }
@@ -130,7 +128,7 @@ describe('gateway condition schema with plugins', () => {
       gatewaySrv = srv.app;
       const req = Object.create(express.request);
       req.url = '/test';
-      assert.throw(() => req.matchEGCondition({ name: 'test-condition-2', param1: true }));
+      assert.isNull(req.matchEGCondition({ name: 'test-condition-2', param1: true }));
     });
   });
 });
