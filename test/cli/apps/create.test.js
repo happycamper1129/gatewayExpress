@@ -8,8 +8,6 @@ const idGen = require('uuid62');
 const helpers = require('yeoman-test');
 const { checkOutput } = require('../../common/output-helper');
 
-const usrName = idGen.v4();
-
 describe('eg apps create', () => {
   let program, env, user;
   before(() => {
@@ -21,7 +19,7 @@ describe('eg apps create', () => {
   beforeEach(() => {
     env.prepareHijack();
     return adminHelper.admin.users.create({
-      username: usrName,
+      username: idGen.v4(),
       firstname: 'La',
       lastname: 'Deeda'
     })
@@ -135,7 +133,8 @@ describe('eg apps create', () => {
       });
     });
 
-    env.argv = program.parse(`apps create -u ${usrName} -p "name=appy" -p "redirectUri=http://localhost:3000/cb"`);
+    env.argv = program.parse('apps create -u lala -p "name=appy" ' +
+      '-p "redirectUri=http://localhost:3000/cb"');
   });
 
   it('creates an app from properties with user ID', done => {
@@ -205,7 +204,7 @@ describe('eg apps create', () => {
       });
     });
 
-    env.argv = program.parse(`apps create -u ${usrName} --stdin`);
+    env.argv = program.parse('apps create -u lala --stdin');
   });
 
   it('prints only the app id when using the --quiet flag', done => {
@@ -259,7 +258,7 @@ describe('eg apps create', () => {
           output = message;
         };
         generator.log.error = message => {
-          assert.equal(message, 'data should have required property \'name\'');
+          assert.equal(message, 'Failed to insert application: name is required');
         };
         generator.log.ok = message => {
           output = message;
@@ -280,11 +279,7 @@ describe('eg apps create', () => {
   });
 
   it('prints error on invalid user', done => {
-    const app = {
-      name: 'appy',
-      redirectUri: 'http://localhost:3000/cb'
-    };
-
+    const app = {};
     env.hijack(namespace, generator => {
       generator.once('run', () => {
         generator.log = message => {
@@ -325,6 +320,7 @@ describe('eg apps create', () => {
       });
     });
 
-    env.argv = program.parse(`apps create -u ${usrName} -p "name=" -p "redirectUri=http://example.com/cb"`);
+    env.argv = program.parse('apps create -u lala -p "name=" ' +
+      '-p "redirectUri=http://example.com/cb"');
   });
 });

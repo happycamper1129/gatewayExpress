@@ -1,7 +1,5 @@
 const Generator = require('yeoman-generator');
-const chalk = require('chalk');
 const config = require('../lib/config');
-const { validate, find } = require('../lib/schemas');
 
 module.exports = class EgGenerator extends Generator {
   constructor (args, opts) {
@@ -91,63 +89,5 @@ module.exports = class EgGenerator extends Generator {
     }
 
     return verbose;
-  }
-
-  _promptAndValidate (object, schema, options) {
-    options = options || {};
-    options.skipPrompt = options.skipPrompt || false;
-
-    let questions = [];
-
-    if (!options.skipPrompt) {
-      let shouldPrompt = false;
-      const missingProperties = [];
-      const modelSchema = find(schema).schema;
-
-      Object.keys(modelSchema.properties).forEach(prop => {
-        const descriptor = modelSchema.properties[prop];
-        if (!object[prop]) {
-          if (!shouldPrompt && modelSchema.required.includes(prop)) {
-            shouldPrompt = true;
-          }
-
-          missingProperties.push({ name: prop, descriptor: descriptor });
-        }
-      });
-
-      if (shouldPrompt) {
-        questions = missingProperties.map(p => {
-          const required = modelSchema.required.includes(p.name)
-            ? ' [required]'
-            : '';
-
-          return {
-            name: p.name,
-            message: `Enter ${chalk.yellow(p.name)}${chalk.green(required)}:`,
-            default: p.default,
-            validate: input => !modelSchema.required.includes(p.name) ||
-              (!!input && modelSchema.required.includes(p.name)),
-            filter: input => input === '' && !modelSchema.required.includes(p.name) ? undefined : input
-          };
-        });
-      }
-    }
-
-    const validateData = data => {
-      const { isValid, error } = validate(schema, data);
-      if (!isValid) {
-        this.log.error(error);
-        if (!options.skipPrompt) {
-          return this.prompt(questions).then(validateData);
-        }
-        return {};
-      }
-      return data;
-    };
-
-    return this.prompt(questions).then((answers) => {
-      Object.assign(object, answers);
-      return validateData(object);
-    });
   }
 };

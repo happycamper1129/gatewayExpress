@@ -1,5 +1,5 @@
+const chalk = require('chalk');
 const eg = require('../../eg');
-const SCHEMA = 'http://express-gateway.io/models/users.json';
 
 module.exports = class extends eg.Generator {
   constructor (args, opts) {
@@ -60,7 +60,7 @@ module.exports = class extends eg.Generator {
               isLast: index === lines.length - 1
             };
 
-            return this._promptAndValidate(user, options).then(this.admin.users.create).then(newUser => {
+            return this._insert(user, options).then(newUser => {
               if (newUser) {
                 if (!argv.q) {
                   this.log.ok(`Created ${newUser.username}`);
@@ -110,8 +110,7 @@ module.exports = class extends eg.Generator {
     if (hasInvalidProperty) {
       return;
     }
-    return this._promptAndValidate(user, SCHEMA)
-      .then(this.admin.users.create)
+    return this._insert(user)
       .then(newUser => {
         if (!argv.q) {
           this.log.ok(`Created ${newUser.id}`);
@@ -122,6 +121,55 @@ module.exports = class extends eg.Generator {
       })
       .catch(err => {
         this.log.error((err.response && err.response.error && err.response.error.text) || err.message);
+      });
+  }
+  _insert (user, options) {
+    const models = this.eg.config.models;
+
+    options = options || {};
+    options.skipPrompt = options.skipPrompt || false;
+
+    let questions = [];
+
+    if (!options.skipPrompt) {
+      let shouldPrompt = false;
+      const missingProperties = [];
+
+      const configProperties = Object.assign({ username: { isRequired: true } },
+        models.users.properties);
+
+      Object.keys(configProperties).forEach(prop => {
+        const descriptor = configProperties[prop];
+        if (!user[prop]) {
+          if (!shouldPrompt && descriptor.isRequired) {
+            shouldPrompt = true;
+          }
+
+          missingProperties.push({ name: prop, descriptor: descriptor });
+        }
+      });
+
+      if (shouldPrompt) {
+        questions = missingProperties.map(p => {
+          const required = p.descriptor.isRequired
+            ? ' [required]'
+            : '';
+
+          return {
+            name: p.name,
+            message: `Enter ${chalk.yellow(p.name)}${chalk.green(required)}:`,
+            default: p.defaultValue,
+            validate: input => !p.descriptor.isRequired ||
+              (!!input && p.descriptor.isRequired)
+          };
+        });
+      }
+    }
+
+    return this.prompt(questions)
+      .then(answers => {
+        user = Object.assign(user, answers);
+        return this.admin.users.create(user);
       });
   }
 };
