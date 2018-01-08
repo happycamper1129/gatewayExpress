@@ -10,7 +10,7 @@
           "properties": {
             "emulate": {
               "type": "boolean",
-              "default": false
+              "default": "true"
             }
           },
           "required": [
