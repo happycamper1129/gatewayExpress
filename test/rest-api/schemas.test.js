@@ -1,4 +1,4 @@
-const should = require('should');
+const { assert } = require('chai');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
@@ -47,10 +47,10 @@ describe('REST: schemas', () => {
         .then((schemasResult) => {
           const found = schemasResult.find(schemaResult => schemaResult.schema.$id.includes('basic-auth'));
           const other = schemasResult.filter(schemaResult => schemaResult.type !== 'policy');
-          should(found.schema).not.be.undefined();
-          should(found.schema.$id).containEql('basic-auth');
-          should(found.type).be.eql('policy');
-          should(other.length).be.eql(0);
+          assert.include(found.schema.$id, 'basic-auth');
+          assert.equal(found.type, 'policy');
+          assert.isDefined(found.schema);
+          assert.equal(other.length, 0);
         });
     });
 
@@ -58,7 +58,7 @@ describe('REST: schemas', () => {
       return adminHelper.admin.config.schemas
         .list('http://express-gateway.io/schemas/policies/basic-auth.json')
         .then((schema) => {
-          should(schema.schema.$id).containEql('basic-auth');
+          assert.include(schema.schema.$id, 'basic-auth');
         });
     });
   });

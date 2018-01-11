@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const request = require('supertest');
-const should = require('should');
+const assert = require('chai').assert;
 
 const config = require('../../../lib/config');
 const gateway = require('../../../lib/gateway');
@@ -66,7 +66,7 @@ describe('@proxy policy', () => {
       const serviceOptions = { target: { keyFile: '/non/existent/file.key' } };
 
       setupGateway(serviceOptions).catch(err => {
-        should(err.message).match(/no such file or directory/);
+        assert.match(err.message, /no such file or directory/);
         done();
       });
     });

@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
-const should = require('should');
+const assert = require('chai').assert;
 const cpr = require('cpr');
 const rimraf = require('rimraf');
 const tmp = require('tmp');
@@ -44,7 +44,7 @@ describe('E2E: eg plugins install', () => {
         const _cpr = util.promisify(cpr);
         return Promise.all([
           _cpr(gatewayDirectory, tempPath),
-          _cpr(path.join(__dirname, '../../lib/config/models'), path.join(tempPath, 'config', 'models'))
+          _cpr(path.join(__dirname, '../../lib/config/models'), path.join(tempPath, 'models'))
         ]);
       })
       .then(([files]) => {
@@ -82,7 +82,7 @@ describe('E2E: eg plugins install', () => {
       }
     };
 
-    should(systemConfig.plugins).be.deepEqual(expected);
+    assert.deepEqual(systemConfig.plugins, expected);
     done();
   });
 });

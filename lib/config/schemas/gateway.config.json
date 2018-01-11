@@ -106,10 +106,7 @@
       }
     },
     "pipelines": {
-      "type": [
-        "object",
-        "array"
-      ],
+      "type": "object",
       "additionalProperties": {
         "type": "object",
         "properties": {

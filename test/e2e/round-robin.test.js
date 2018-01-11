@@ -2,7 +2,7 @@ const { fork } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const should = require('should');
+const assert = require('chai').assert;
 const cpr = require('cpr');
 const request = require('superagent');
 const rimraf = require('rimraf');
@@ -92,9 +92,9 @@ describe('round-robin load @balancing @proxy', () => {
                         request
                           .get(`http://localhost:${gatewayPort}/not-found`)
                           .end((err, res) => {
-                            should(err).not.be.undefined();
-                            should(res.clientError).not.be.undefined();
-                            should(res.statusCode).be.eql(404);
+                            assert(err);
+                            assert(res.clientError);
+                            assert(res.statusCode, 404);
                             done();
                           });
                       }, 5000);
@@ -117,23 +117,23 @@ describe('round-robin load @balancing @proxy', () => {
     request
       .get(`http://localhost:${gatewayPort}/round-robin`)
       .end((err, res) => {
-        if (err) return done(err);
-        should(res.statusCode).be.eql(200);
-        should(res.text).be.eql(`Hello from port ${port1}`);
+        assert(!err);
+        assert.equal(res.statusCode, 200);
+        assert.equal(res.text, `Hello from port ${port1}`);
 
         request
           .get(`http://localhost:${gatewayPort}/round-robin`)
           .end((err, res) => {
-            if (err) return done(err);
-            should(res.statusCode).be.eql(200);
-            should(res.text).be.eql(`Hello from port ${port2}`);
+            assert(!err);
+            assert.equal(res.statusCode, 200);
+            assert.equal(res.text, `Hello from port ${port2}`);
 
             request
               .get(`http://localhost:${gatewayPort}/round-robin`)
               .end((err, res) => {
-                if (err) return done(err);
-                should(res.statusCode).be.eql(200);
-                should(res.text).be.eql(`Hello from port ${port1}`);
+                assert(!err);
+                assert.equal(res.statusCode, 200);
+                assert.equal(res.text, `Hello from port ${port1}`);
                 done();
               });
           });

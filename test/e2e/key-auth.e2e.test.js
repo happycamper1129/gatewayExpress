@@ -3,6 +3,7 @@ const cliHelper = require('../common/cli.helper');
 const gwHelper = require('../common/gateway.helper');
 const idGen = require('uuid62');
 
+let gatewayProcess = null;
 let gatewayPort, adminPort, configDirectoryPath;
 const username = idGen.v4();
 let keyCred;
@@ -70,6 +71,7 @@ describe('E2E: key-auth Policy', () => {
     return cliHelper.bootstrapFolder().then(dirInfo => {
       return gwHelper.startGatewayInstance({ dirInfo, gatewayConfig });
     }).then(gwInfo => {
+      gatewayProcess = gwInfo.gatewayProcess;
       gatewayPort = gwInfo.gatewayPort;
       adminPort = gwInfo.adminPort;
       configDirectoryPath = gwInfo.dirInfo.configDirectoryPath;
@@ -99,6 +101,14 @@ describe('E2E: key-auth Policy', () => {
     }).then(cred => {
       keyCred = cred;
     });
+  });
+
+  after('cleanup', (done) => {
+    if (gatewayProcess) {
+      gatewayProcess.kill();
+    }
+
+    done();
   });
 
   it('should not authenticate key for requests without authorization header', function () {

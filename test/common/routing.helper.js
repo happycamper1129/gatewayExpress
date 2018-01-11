@@ -1,5 +1,6 @@
+// const path = require('path');
 const request = require('supertest');
-const should = require('should');
+const assert = require('chai').assert;
 const logger = require('../../lib/logger').test;
 const gateway = require('../../lib/gateway');
 const config = require('../../lib/config');
@@ -26,12 +27,12 @@ module.exports = function () {
   }
   return {
     addPolicy: (name, handler) => { // TODO: make it plugin
-      policies.register({ policy: handler, name });
+      policies.register({policy: handler, name});
     },
-    setup: ({ config, plugins } = {}) => {
+    setup: ({config, plugins} = {}) => {
       originalPolicies = policies;
 
-      return gateway({ config, plugins })
+      return gateway({config, plugins})
         .then(apps => {
           app = apps.app;
           httpsApp = apps.httpsApp;
@@ -95,14 +96,14 @@ module.exports = function () {
           .expect('Content-Type', /json/)
           .expect((res) => {
             if (testCase.test.result) {
-              should(res.body.result).be.eql(testCase.test.result);
+              assert.equal(res.body.result, testCase.test.result);
             }
-            should(res.body.url).be.eql(testCase.test.url);
+            assert.equal(res.body.url, testCase.test.url);
             if (testCase.test.host) {
-              should(res.body.hostname).be.eql(testCase.test.host);
+              assert.equal(res.body.hostname, testCase.test.host);
             }
             if (testCase.test.scopes) {
-              should(res.body.apiEndpoint.scopes).be.deepEqual(testCase.test.scopes);
+              assert.deepEqual(res.body.apiEndpoint.scopes, testCase.test.scopes);
             }
           })
           .end((err, res) => {
@@ -116,7 +117,7 @@ module.exports = function () {
         const testScenario = prepareScenario(testCase);
         testScenario
           .expect((res) => {
-            should(res.body.params).be.deepEqual(testCase.test.params);
+            assert.deepEqual(res.body.params, testCase.test.params);
           })
           .end((err, res) => {
             if (err) { logger.error(res.body); }

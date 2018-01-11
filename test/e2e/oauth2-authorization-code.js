@@ -5,7 +5,7 @@ const path = require('path');
 const url = require('url');
 const util = require('util');
 
-const should = require('should');
+const assert = require('chai').assert;
 const cpr = require('cpr');
 const express = require('express');
 const phantomjs = require('phantomjs-prebuilt');
@@ -120,9 +120,9 @@ describe('oauth2 authorization code grant type', () => {
         .get(`http://localhost:${gatewayPort}`)
         .end((err, res) => {
           // Verify Unauthorized when calling without access token.
-          should(err).not.be.undefined();
-          should(res.unauthorized).not.be.undefined();
-          should(res.statusCode).be.eql(401);
+          assert(!!err);
+          assert(res.unauthorized);
+          assert.equal(401, res.statusCode);
           resolve();
         });
     });
@@ -167,7 +167,7 @@ describe('oauth2 authorization code grant type', () => {
           .set('Authorization', `Bearer ${accessToken}`);
       })
       .then(res => {
-        should(res.statusCode).be.eql(200);
+        assert.equal(200, res.statusCode);
       })
       .then(() => driver.quit());
   });
@@ -234,9 +234,9 @@ describe('oauth2 authorization code grant type', () => {
             request
               .get(`http://localhost:${gatewayPort}/not-found`)
               .end((err, res) => {
-                should(err).not.be.undefined();
-                should(res.clientError).not.be.undefined();
-                should(res.statusCode).be.eql(401);
+                assert(err);
+                assert(res.clientError);
+                assert(res.statusCode, 404);
                 resolve();
               });
           }, 4000);
