@@ -1,21 +1,19 @@
 FROM node:8-alpine
 
-LABEL maintainer Vincenzo Chianese, vincenzo@express-gateway.io
+ARG VERSION
+ARG TYPE=basic
 
-ARG EG_VERSION
 ENV NODE_ENV production
-ENV NODE_PATH /usr/local/share/.config/yarn/global/node_modules/
-ENV EG_CONFIG_DIR /var/lib/eg
-# Enable chokidar polling so hot-reload mechanism can work on docker or network volumes
+# this will enable polling, hot-reload will work on docker or network volumes
 ENV CHOKIDAR_USEPOLLING true
 
-VOLUME /var/lib/eg
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
-RUN yarn global add express-gateway@$EG_VERSION
+RUN npm install express-gateway@$VERSION && \
+    ./node_modules/.bin/eg gateway create -n gateway -d . -t $TYPE && \
+    npm cache clean --force
 
-COPY ./bin/generators/gateway/templates/basic/config /var/lib/eg
-COPY ./lib/config/models /var/lib/eg/models
+EXPOSE 8080
 
-EXPOSE 8080 9876
-
-CMD node -e "require('express-gateway')().run();"
+CMD [ "npm", "run", "start" ]

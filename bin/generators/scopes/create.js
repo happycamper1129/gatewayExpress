@@ -19,16 +19,18 @@ module.exports = class extends eg.Generator {
       ? argv.scope
       : [argv.scope];
 
-    return this.admin.scopes.create(scopes)
-      .then(res => {
-        if (argv.q) {
-          this.stdout(scopes);
-        } else {
-          this.log.ok(`Created ${scopes}`);
-        }
-      })
-      .catch(err => {
-        this.log.error(err.response.text);
-      });
+    return Promise.all(scopes.map((scope) => {
+      return this.admin.scopes.create(argv.scope)
+        .then(res => {
+          if (argv.q) {
+            this.stdout(`${scope}`);
+          } else {
+            this.log.ok(`Created ${scope}`);
+          }
+        })
+        .catch(err => {
+          this.log.error(err.message);
+        });
+    }));
   };
 };

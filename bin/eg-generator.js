@@ -56,14 +56,15 @@ module.exports = class EgGenerator extends Generator {
       .describe('H', 'Header to send with each request to Express Gateway Admin API KEY:VALUE format')
       .alias('v', 'verbose')
       .describe('v', 'Verbose output, will show request to Admin API')
-      .group(['no-color', 'q'], 'Options:');
+      .group(['no-color', 'q'], 'Options:')
+      .help('h');
   }
 
   _getAdminClientBaseURL () {
     const gatewayConfig = config.gatewayConfig;
     const systemConfig = config.systemConfig;
 
-    let baseURL = 'http://localhost:9876/'; // fallback default
+    let baseURL = 'http://localhost:9876'; // fallback default
 
     if (process.env.EG_ADMIN_URL) {
       baseURL = process.env.EG_ADMIN_URL;
@@ -74,7 +75,7 @@ module.exports = class EgGenerator extends Generator {
       const hostname = adminConfig.hostname || 'localhost';
       const port = adminConfig.port || 9876;
 
-      baseURL = `http://${hostname}:${port}/`;
+      baseURL = `http://${hostname}:${port}`;
     }
 
     return baseURL;

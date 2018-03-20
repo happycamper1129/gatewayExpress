@@ -14,7 +14,6 @@ module.exports = class extends eg.Generator {
           .demandOption(['t'])
           .nargs('t', 1)
           .describe('t', 'Type of credential: can be one of: oauth2, basic-auth, key-auth')
-          .positional('id', { type: 'string' })
     });
   }
 

@@ -9,7 +9,6 @@ module.exports = class extends eg.Generator {
       builder: yargs =>
         yargs
           .usage(`Usage: $0 ${process.argv[2]} remove [options] <user_id|user_name..>`)
-          .positional('user_name', { type: 'string' })
     });
   }
 
