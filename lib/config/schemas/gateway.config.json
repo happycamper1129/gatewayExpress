@@ -26,13 +26,6 @@
               },
               "cert": {
                 "type": "string"
-              },
-              "ca": {
-                "type": "array",
-                "uniqueItems": true,
-                "items": {
-                  "type": "string"
-                }
               }
             }
           }
