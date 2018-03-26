@@ -24,43 +24,33 @@ describe('@e2e @proxy through proxy', () => {
       }
     }
   };
-
   const proxiedUrls = {};
   let gw;
-  let proxy;
-  let srv;
-
   before('init', (done) => {
     cliHelper.bootstrapFolder().then(dirInfo => {
-      proxy = httpProxy.createProxyServer({ changeOrigin: true });
+      const proxy = httpProxy.createProxyServer({
+        changeOrigin: true
+      });
 
-      srv = http.createServer(function (req, res) {
+      const srv = http.createServer(function (req, res) {
         proxiedUrls[req.url] = true;
         proxy.web(req, res, { target: req.url });
       });
 
-      const server = srv.listen(0, (err) => {
-        if (err) {
-          return done(err);
-        }
-
-        process.env.HTTP_PROXY = `http://localhost:${server.address().port}`;
-        gwHelper.startGatewayInstance({ dirInfo, gatewayConfig }).then(({ gatewayProcess }) => {
+      const server = srv.listen(0, () => {
+        process.env.http_proxy = 'http://localhost:' + server.address().port;
+        gwHelper.startGatewayInstance({ dirInfo, gatewayConfig }).then(({gatewayProcess}) => {
           gw = gatewayProcess;
           done();
-        }).catch(done);
+        });
       });
     });
   });
-
-  after('cleanup', (done) => {
-    delete process.env.HTTP_PROXY;
+  after('cleanup', () => {
+    delete process.env.http_proxy;
     gw.kill();
-    proxy.close();
-    srv.close(done);
   });
-
-  it('should respect HTTP_PROXY env var and send through proxy', () => {
+  it('should respect http_proxy env var and send through proxy', () => {
     return request
       .get(`http://localhost:${gatewayConfig.http.port}/test`)
       .then((res) => {

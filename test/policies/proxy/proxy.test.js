@@ -80,7 +80,9 @@ describe('@proxy policy', () => {
         });
       });
 
-      after((done) => app.close(done));
+      after((done) => {
+        app.close(done);
+      });
 
       it('responds with a bad gateway error', () => {
         return expectedResponse(app, 502, /text\/html/);
@@ -140,10 +142,10 @@ describe('@proxy policy', () => {
   });
 });
 
-const setupGateway = (serviceOptions = {}, policyOptions = {}) =>
-  findOpenPortNumbers(1).then(([port]) => {
+function setupGateway (serviceOptions = {}, policyOptions = {}) {
+  return findOpenPortNumbers(1).then((ports) => {
     config.gatewayConfig = {
-      http: { port },
+      http: { port: ports[0] },
       apiEndpoints: {
         test: {}
       },
@@ -168,3 +170,4 @@ const setupGateway = (serviceOptions = {}, policyOptions = {}) =>
 
     return gateway();
   });
+}
