@@ -40,13 +40,12 @@ $ npm install -g express-gateway
 $ eg gateway create
 ```
 
-#### Get Help
+#### Support
 Need help or have a question?
 - [Express Gateway Documentation][eg-docs]
 - [Frequently Asked Questions (FAQ)][eg-faq]
 
-#### Commercial Support
-Express Gateway is commerically supported [LunchBadger][lb-url].  For more information about support plans please contact [info@express-gateway.io][eg-support].
+Still need help? See below...
 
 #### Community
 Express has a large vibrant community that we hope to extend further with Express Gateway's API gateway use case for Express and its middleware.
@@ -97,8 +96,7 @@ Copyright © LunchBadger, Inc. and Express Gateway Contributors
 [eg-twitter]: https://twitter.com/express_gateway
 [eg-newsgroup]: https://groups.google.com/a/express-gateway.io/forum/#!forum/discuss
 [eg-facebook]: https://www.facebook.com/expressjsgateway
-[eg-support]: mailto:info@express-gateway.io?subject=commercial%20support
 [contributor-guide]: https://github.com/ExpressGateway/express-gateway/blob/master/Contributing.md
 [lb-url]: https://www.lunchbadger.com
 [joyent-url]: https://www.joyent.com
-[apache-license]: https://github.com/expressgateway/express-gateway/blob/master/LICENSE.md
+[apache-license]: https://github.com/expressgateway/express-gateway/blob/master/LICENSE.md  
