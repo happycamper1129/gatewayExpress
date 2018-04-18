@@ -3,16 +3,13 @@ const cliHelper = require('../common/cli.helper');
 const gwHelper = require('../common/gateway.helper');
 const idGen = require('uuid62');
 
+let gatewayPort, adminPort, configDirectoryPath;
 const username = idGen.v4();
-const headerName = 'Authorization';
-
-let gatewayPort, adminPort, configDirectoryPath, gatewayProcess, backendServer;
 let keyCred;
-
+const headerName = 'Authorization';
 const proxyPolicy = {
   proxy: { action: { serviceEndpoint: 'backend' } }
 };
-
 describe('E2E: key-auth Policy', () => {
   before('setup', () => {
     const gatewayConfig = {
@@ -73,8 +70,6 @@ describe('E2E: key-auth Policy', () => {
     return cliHelper.bootstrapFolder().then(dirInfo => {
       return gwHelper.startGatewayInstance({ dirInfo, gatewayConfig });
     }).then(gwInfo => {
-      gatewayProcess = gwInfo.gatewayProcess;
-      backendServer = gwInfo.backendServer;
       gatewayPort = gwInfo.gatewayPort;
       adminPort = gwInfo.adminPort;
       configDirectoryPath = gwInfo.dirInfo.configDirectoryPath;
@@ -106,11 +101,6 @@ describe('E2E: key-auth Policy', () => {
     });
   });
 
-  after((done) => {
-    gatewayProcess.kill();
-    backendServer.close(done);
-  });
-
   it('should not authenticate key for requests without authorization header', function () {
     return request(`http://localhost:${gatewayPort}`)
       .get('/authorizedPath')
@@ -138,7 +128,6 @@ describe('E2E: key-auth Policy', () => {
       .expect(200)
       .end(done);
   });
-
   it('should authenticate key with scheme ignoring case in headers for requests with scopes if requester is authorized', function (done) {
     const apikey = 'scheME1 ' + keyCred.keyId + ':' + keyCred.keySecret;
 
@@ -148,7 +137,6 @@ describe('E2E: key-auth Policy', () => {
       .expect(200)
       .end(done);
   });
-
   it('should authenticate key in query for requests with scopes if requester is authorized ', function (done) {
     const apikey = keyCred.keyId + ':' + keyCred.keySecret;
 
@@ -176,7 +164,6 @@ describe('E2E: key-auth Policy', () => {
       .expect(200)
       .end(done);
   });
-
   it('should not authenticate with header of EP allows only query', function (done) {
     const apikey = 'apiKey ' + keyCred.keyId + ':' + keyCred.keySecret;
 
