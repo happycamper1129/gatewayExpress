@@ -24,27 +24,6 @@ const appCredential = {
   secret: idGen.v4()
 };
 
-const userCred = {};
-
-const jwtTokenChecks = (response) => {
-  let decodedjwt;
-  it('shuold return a token with type \'Bearer\'', () => {
-    should(response()).have.property('token_type', 'Bearer');
-    should(response()).have.property('access_token');
-  });
-
-  it('should be correctly decoded as a JWT', () => {
-    decodedjwt = jwt.verify(response().access_token, config.systemConfig.accessTokens.secretOrPrivateKey,
-      { audience: config.systemConfig.accessTokens.audience, issuer: config.systemConfig.accessTokens.issuer });
-    should(decodedjwt).be.Object();
-  });
-
-  it('should contain consumer id and scopes', () => {
-    should(decodedjwt).have.properties(['consumerId', 'scopes']);
-    should(decodedjwt).property('scopes').eql(['read', 'write']);
-  });
-};
-
 const gatewayConfig = (port) => ({
   http: { port: 0 },
   serviceEndpoints: {
@@ -93,9 +72,8 @@ describe('oAuth2 policy', () => {
           lastname: 'Kent',
           email: 'test@example.com'
         }))
-        .then(user => credentialService.insertCredential(user.id, 'basic-auth', {}).then(cred => { Object.assign(userCred, { password: cred.password, username: user.username }); return user; }))
-        .then(user => appService.insert({ name: 'appy', 'redirectUri': 'http://haha.com' }, user.id))
-        .then(app => credentialService.insertCredential(app.id, 'oauth2', appCredential))
+        .then((user) => appService.insert({ name: 'appy', 'redirectUri': 'http://haha.com' }, user.id))
+        .then((app) => credentialService.insertCredential(app.id, 'oauth2', appCredential))
         .then(credential => credentialService.addScopesToCredential(credential.id, 'oauth2', ['read', 'write']).then(() => credential))
         .then(credential => Object.assign(appCredential, credential))
         .then(() => serverHelper.findOpenPortNumbers(1))
@@ -112,23 +90,31 @@ describe('oAuth2 policy', () => {
     });
 
     let _response;
+    let decodedjwt;
 
     before(() => request(gateway)
       .post('/oauth2/token')
-      .type('form')
       .send({
-        grant_type: 'password',
+        grant_type: 'client_credentials',
         client_id: appCredential.id,
         client_secret: appCredential.secret,
-        username: userCred.username,
-        password: userCred.password,
         scope: ['read', 'write'].join(' ')
       }).expect(200).then((response) => { _response = response.body; }));
 
-    jwtTokenChecks(() => _response);
+    it('shuold return a token with type \'Bearer\'', () => {
+      should(_response).have.property('token_type', 'Bearer');
+      should(_response).have.property('access_token');
+    });
 
-    it('should include a refresh token', () => {
-      should(_response).have.property('refresh_token');
+    it('should be correctly decoded as a JWT', () => {
+      decodedjwt = jwt.verify(_response.access_token, config.systemConfig.accessTokens.secretOrPrivateKey,
+        { audience: config.systemConfig.accessTokens.audience, issuer: config.systemConfig.accessTokens.issuer });
+      should(decodedjwt).be.Object();
+    });
+
+    it('should contain consumer id and scopes', () => {
+      should(decodedjwt).have.properties(['consumerId', 'scopes']);
+      should(decodedjwt).property('scopes').eql(['read', 'write']);
     });
 
     it('should let me access the authenticated resource using the JWT token', () =>
@@ -137,35 +123,6 @@ describe('oAuth2 policy', () => {
         .set('Authorization', `Bearer ${_response.access_token}`)
         .expect(200)
     );
-
-    describe('should let me get a new token using the provided refresh token', () => {
-      before(() => request(gateway)
-        .post('/oauth2/token')
-        .type('form')
-        .send({
-          grant_type: 'refresh_token',
-          client_id: appCredential.id,
-          client_secret: appCredential.secret,
-          refresh_token: _response.refresh_token
-        }).expect(200).then((response) => { _response = response.body; })
-      );
-
-      jwtTokenChecks(() => _response);
-    });
-
-    describe('should do the same with client credential flow', () => {
-      before(() => request(gateway)
-        .post('/oauth2/token')
-        .send({
-          grant_type: 'client_credentials',
-          client_id: appCredential.id,
-          client_secret: appCredential.secret,
-          scope: ['read', 'write'].join(' ')
-        }).expect(200).then((response) => { _response = response.body; })
-      );
-
-      jwtTokenChecks(() => _response);
-    });
 
     after('cleanup', (done) => {
       config.systemConfig = originalSystemConfig;
