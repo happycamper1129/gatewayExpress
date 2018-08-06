@@ -6,28 +6,6 @@ const namespace = 'express-gateway:users:list';
 const superagent = require('superagent');
 const sinon = require('sinon');
 
-const generateUser = () => adminHelper.admin.users.create({
-  username: idGen.v4(),
-  firstname: 'La',
-  lastname: 'Deeda'
-});
-
-const attachGeneratorEvents = (generator, output, callback) => {
-  generator.once('run', () => {
-    generator.log.error = message => {
-      callback(new Error(message));
-    };
-    generator.stdout = message => {
-      try {
-        const usr = JSON.parse(message);
-        output[usr.username] = true;
-      } catch (e) {
-        output[message] = true;
-      }
-    };
-  });
-};
-
 describe('eg users list', () => {
   let program, env, user1, user2;
 
@@ -39,9 +17,19 @@ describe('eg users list', () => {
 
   beforeEach(() => {
     env.prepareHijack();
-    return Promise.all([generateUser(), generateUser()]).then(([firstUser, secondUser]) => {
-      user1 = firstUser;
-      user2 = secondUser;
+    return adminHelper.admin.users.create({
+      username: idGen.v4(),
+      firstname: 'La',
+      lastname: 'Deeda'
+    }).then(user => {
+      user1 = user;
+      return adminHelper.admin.users.create({
+        username: idGen.v4(),
+        firstname: 'La',
+        lastname: 'Deeda'
+      });
+    }).then(user => {
+      user2 = user;
     });
   });
 
@@ -54,7 +42,15 @@ describe('eg users list', () => {
     env.hijack(namespace, generator => {
       const output = {};
 
-      attachGeneratorEvents(generator, output, done);
+      generator.once('run', () => {
+        generator.log.error = message => {
+          done(new Error(message));
+        };
+        generator.stdout = message => {
+          const usr = JSON.parse(message);
+          output[usr.username] = true;
+        };
+      });
 
       generator.once('end', () => {
         assert.ok(output[user1.username]);
@@ -71,7 +67,14 @@ describe('eg users list', () => {
     env.hijack(namespace, generator => {
       const output = {};
 
-      attachGeneratorEvents(generator, output, done);
+      generator.once('run', () => {
+        generator.log.error = message => {
+          done(new Error(message));
+        };
+        generator.stdout = message => {
+          output[message] = true;
+        };
+      });
 
       generator.once('end', () => {
         assert.ok(output[user1.username]);
@@ -94,7 +97,14 @@ describe('eg users list', () => {
       env.hijack(namespace, generator => {
         const output = {};
 
-        attachGeneratorEvents(generator, output, done);
+        generator.once('run', () => {
+          generator.log.error = message => {
+            done(new Error(message));
+          };
+          generator.stdout = message => {
+            output[message] = true;
+          };
+        });
 
         generator.once('end', () => {
           const args = superagent.Request.prototype.set.lastCall.args;
@@ -113,7 +123,14 @@ describe('eg users list', () => {
       env.hijack(namespace, generator => {
         const output = {};
 
-        attachGeneratorEvents(generator, output, done);
+        generator.once('run', () => {
+          generator.log.error = message => {
+            done(new Error(message));
+          };
+          generator.stdout = message => {
+            output[message] = true;
+          };
+        });
 
         generator.once('end', () => {
           assert.ok(superagent.Request.prototype.set.calledWithMatch(sinon.match('X'), sinon.match('Y')));
@@ -125,24 +142,6 @@ describe('eg users list', () => {
       });
 
       env.argv = program.parse('users list -H "X:Y" -H "A:B" -q');
-    });
-  });
-
-  describe('page navigation', () => {
-    before(() => Promise.all(Array(100).fill().map(generateUser)));
-
-    it('should show all the users when they fill multiple pages', done => {
-      env.hijack(namespace, generator => {
-        const output = {};
-
-        attachGeneratorEvents(generator, output, done);
-
-        generator.once('end', () => {
-          assert.equal(Object.keys(output).length, 102);
-          done();
-        });
-      });
-      env.argv = program.parse('users list -a');
     });
   });
 });

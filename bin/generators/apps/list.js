@@ -10,13 +10,12 @@ module.exports = class extends eg.Generator {
       builder: yargs =>
         yargs
           .usage(`Usage: $0 ${process.argv[2]} list [options]`)
-          .boolean('a').alias('a', 'all').describe('a', 'List all the apps instead of stopping to the fist page')
           .example(`$0 ${process.argv[2]} list`)
     });
   }
 
   prompting () {
-    return this.admin.apps.list({ all: this.argv.a })
+    return this.admin.apps.list()
       .then(data => {
         const apps = data.apps;
         if (!apps || !apps.length) {

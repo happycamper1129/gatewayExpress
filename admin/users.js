@@ -32,24 +32,13 @@ module.exports = function (client) {
         .get(`${baseUrl}${encodeURIComponent(id)}`)
         .then(res => res.body);
     },
-    list (params = {}) {
-      let results = [];
-
-      const fetchNext = (res) => {
-        results = results.concat(res.body.users);
-        if (params.all && res.body.nextKey !== 0) {
-          return client
-            .get(baseUrl)
-            .query({ start: res.body.nextKey, count: params.count })
-            .then(fetchNext);
-        }
-        return { users: results, nextKey: res.body.nextKey };
-      };
-
+    list (params) {
       return client
         .get(baseUrl)
         .query(params)
-        .then(fetchNext);
+        .then(res => {
+          return res.body;
+        });
     },
 
     remove (id) {
