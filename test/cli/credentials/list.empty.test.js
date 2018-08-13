@@ -38,7 +38,7 @@ describe('eg credentials list -c x [no credentials]', () => {
       });
 
       generator.once('end', () => {
-        assert.strictEqual(message, `Consumer ${user.username} has no credentials`);
+        assert.equal(message, `Consumer ${user.username} has no credentials`);
         done();
       });
     });

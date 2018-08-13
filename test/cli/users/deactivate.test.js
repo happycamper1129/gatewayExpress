@@ -52,8 +52,8 @@ describe('eg users deactivate', () => {
       generator.once('end', () => {
         return adminHelper.admin.users.info(username)
           .then(user => {
-            assert.strictEqual(user.isActive, false);
-            assert.strictEqual(output, 'Deactivated ' + username);
+            assert.equal(user.isActive, false);
+            assert.equal(output, 'Deactivated ' + username);
             done();
           });
       });
@@ -78,8 +78,8 @@ describe('eg users deactivate', () => {
       generator.once('end', () => {
         return adminHelper.admin.users.info(userId)
           .then(user => {
-            assert.strictEqual(user.isActive, false);
-            assert.strictEqual(output, 'Deactivated ' + userId);
+            assert.equal(user.isActive, false);
+            assert.equal(output, 'Deactivated ' + userId);
             done();
           });
       });
@@ -105,12 +105,12 @@ describe('eg users deactivate', () => {
         return adminHelper.admin.users.list()
           .then(data => {
             const users = data.users;
-            assert.strictEqual(users[0].isActive, false);
-            assert.strictEqual(users[1].isActive, false);
+            assert.equal(users[0].isActive, false);
+            assert.equal(users[1].isActive, false);
 
             assert.ok(output['Deactivated ' + username]);
             assert.ok(output['Deactivated ' + username2]);
-            assert.strictEqual(Object.keys(output).length, 2);
+            assert.equal(Object.keys(output).length, 2);
             done();
           });
       });
@@ -135,8 +135,8 @@ describe('eg users deactivate', () => {
       generator.once('end', () => {
         return adminHelper.admin.users.info(username)
           .then(user => {
-            assert.strictEqual(user.isActive, false);
-            assert.strictEqual(output, username);
+            assert.equal(user.isActive, false);
+            assert.equal(output, username);
             done();
           });
       });

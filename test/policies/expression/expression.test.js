@@ -19,8 +19,8 @@ describe('expression action', () => {
     });
 
     expressionMiddleware(req, res, () => {
-      assert.strictEqual(req.url, '/test/67');
-      assert.strictEqual(res.test, 'text68');
+      assert.equal(req.url, '/test/67');
+      assert.equal(res.test, 'text68');
       done();
     });
   });

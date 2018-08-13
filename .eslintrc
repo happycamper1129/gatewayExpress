@@ -25,24 +25,7 @@
       "always"
     ],
     "no-console": "warn",
-    "prefer-const": "error",
-    "node/no-deprecated-api": [
-      "error",
-      {
-        "ignoreModuleItems": [
-          "crypto.createCipher",
-          "crypto.createDecipher"
-        ]
-      }
-    ],
-    "node/no-unsupported-features/node-builtins": [
-      "error",
-      {
-        "ignores": [
-          "util.promisify"
-        ]
-      }
-    ]
+    "prefer-const": "error"
   },
   "root": true
 }

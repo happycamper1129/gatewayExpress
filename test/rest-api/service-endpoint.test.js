@@ -29,7 +29,7 @@ describe('REST: service endpoints', () => {
     });
     it('should create a new service endpoint', () => {
       const testEndpoint = {
-        url: 'express-gateway.io',
+        url: 'https://express-gateway.io',
         customId: idGen.v4()
       };
       return adminHelper.admin.config.serviceEndpoints
@@ -37,7 +37,7 @@ describe('REST: service endpoints', () => {
         .then(() => {
           const data = fs.readFileSync(config.gatewayConfigPath, 'utf8');
           const cfg = yaml.load(data);
-          assert.strictEqual(cfg.serviceEndpoints.test.url, testEndpoint.url);
+          assert.equal(cfg.serviceEndpoints.test.url, testEndpoint.url);
           assert(cfg.serviceEndpoints.test.customId);
         });
     });
@@ -58,7 +58,7 @@ describe('REST: service endpoints', () => {
     });
     it('should create a new service endpoint', () => {
       const testEndpoint = {
-        url: 'express-gateway.io',
+        url: 'https://express-gateway.io',
         customId: idGen.v4() // NOTE: save operation should allow custom props
       };
       return adminHelper.admin.config.serviceEndpoints
@@ -66,15 +66,15 @@ describe('REST: service endpoints', () => {
         .then(() => {
           const data = fs.readFileSync(config.gatewayConfigPath, 'utf8');
           const cfg = yaml.load(data);
-          assert.strictEqual(cfg.serviceEndpoints.test.url, testEndpoint.url);
-          assert.strictEqual(cfg.serviceEndpoints.example.url, 'http://example.com');
-          assert.strictEqual(cfg.serviceEndpoints.hello.url, 'http://hello.com');
+          assert.equal(cfg.serviceEndpoints.test.url, testEndpoint.url);
+          assert.equal(cfg.serviceEndpoints.example.url, 'http://example.com');
+          assert.equal(cfg.serviceEndpoints.hello.url, 'http://hello.com');
           assert(cfg.serviceEndpoints.test.customId);
         });
     });
     it('should update existing endpoint', () => {
       const testEndpoint = {
-        url: 'express-gateway.io',
+        url: 'https://express-gateway.io',
         customId: idGen.v4()
       };
       return adminHelper.admin.config.serviceEndpoints
@@ -82,7 +82,7 @@ describe('REST: service endpoints', () => {
         .then(() => {
           const data = fs.readFileSync(config.gatewayConfigPath, 'utf8');
           const cfg = yaml.load(data);
-          assert.strictEqual(cfg.serviceEndpoints.example.url, testEndpoint.url);
+          assert.equal(cfg.serviceEndpoints.example.url, testEndpoint.url);
           assert(cfg.serviceEndpoints.example.customId);
         });
     });
@@ -100,16 +100,16 @@ describe('REST: service endpoints', () => {
       return adminHelper.admin.config.serviceEndpoints
         .info('example')
         .then((endpoint) => {
-          assert.strictEqual(endpoint.url, 'http://example.com');
+          assert.equal(endpoint.url, 'http://example.com');
         });
     });
     it('should list all endpoints', () => {
       return adminHelper.admin.config.serviceEndpoints
         .list()
         .then((endpoints) => {
-          assert.strictEqual(endpoints.example.url, 'http://example.com');
-          assert.strictEqual(endpoints.hello.url, 'http://hello.com');
-          assert.strictEqual(Object.keys(endpoints).length, 2);
+          assert.equal(endpoints.example.url, 'http://example.com');
+          assert.equal(endpoints.hello.url, 'http://hello.com');
+          assert.equal(Object.keys(endpoints).length, 2);
         });
     });
   });

@@ -48,11 +48,11 @@ describe('eg tokens revoke', () => {
         assert.ok(token);
         assert.ok(token.access_token);
         accessToken = token.access_token;
-        assert.strictEqual(token.token_type, 'Bearer');
+        assert.equal(token.token_type, 'Bearer');
         return authService.authenticateToken(accessToken);
       })
       .then(res => {
-        assert.strictEqual(res.consumer.username, user.username);
+        assert.equal(res.consumer.username, user.username);
       });
   });
 
@@ -75,7 +75,7 @@ describe('eg tokens revoke', () => {
       });
 
       generator.once('end', () => {
-        assert.strictEqual(output, 'Access token has been revoked: ' + accessToken);
+        assert.equal(output, 'Access token has been revoked: ' + accessToken);
         return authService.authenticateToken(accessToken).then(r => {
           assert.ok(!r); // authentication failed
           done();
@@ -99,7 +99,7 @@ describe('eg tokens revoke', () => {
       });
 
       generator.once('end', () => {
-        assert.strictEqual(output, accessToken);
+        assert.equal(output, accessToken);
         return authService.authenticateToken(accessToken).then(r => {
           assert.ok(!r); // authentication failed
           done();

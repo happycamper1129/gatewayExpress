@@ -33,7 +33,7 @@ describe('REST: policies', () => {
         .then(() => {
           const data = fs.readFileSync(config.gatewayConfigPath, 'utf8');
           const cfg = yaml.load(data);
-          assert.deepStrictEqual(cfg.policies, ['test']);
+          assert.deepEqual(cfg.policies, ['test']);
         });
     });
   });
@@ -54,7 +54,7 @@ describe('REST: policies', () => {
         .then(() => {
           const data = fs.readFileSync(config.gatewayConfigPath, 'utf8');
           const cfg = yaml.load(data);
-          assert.deepStrictEqual(cfg.policies, ['example', 'hello', 'test']);
+          assert.deepEqual(cfg.policies, ['example', 'hello', 'test']);
         });
     });
 
@@ -64,14 +64,14 @@ describe('REST: policies', () => {
         .then(() => {
           const data = fs.readFileSync(config.gatewayConfigPath, 'utf8');
           const cfg = yaml.load(data);
-          assert.deepStrictEqual(cfg.policies, ['hello']);
+          assert.deepEqual(cfg.policies, ['hello']);
         });
     });
     it('should list all enabled policies', () => {
       return adminHelper.admin.config.policies
         .list()
         .then((policies) => {
-          assert.deepStrictEqual(policies, ['example', 'hello']);
+          assert.deepEqual(policies, ['example', 'hello']);
         });
     });
   });

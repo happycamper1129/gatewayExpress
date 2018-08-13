@@ -27,7 +27,7 @@ describe('@log policy', () => {
     });
 
     logMiddleware(req, {}, next);
-    assert.strictEqual(logger.info.getCall(0).args[0], '/test GET text');
+    assert.equal(logger.info.getCall(0).args[0], '/test GET text');
     assert.ok(next.calledOnce);
   });
   it('should log requestID', () => {

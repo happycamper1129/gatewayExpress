@@ -51,15 +51,15 @@ describe('eg users create', () => {
         const stdOutUser = JSON.parse(output);
         return adminHelper.admin.users.info(username)
           .then(user => {
-            assert.strictEqual(user.username, username);
-            assert.strictEqual(user.firstname, 'La');
-            assert.strictEqual(user.lastname, 'Deeda');
+            assert.equal(user.username, username);
+            assert.equal(user.firstname, 'La');
+            assert.equal(user.lastname, 'Deeda');
 
-            assert.strictEqual(text, 'Created ' + user.id);
+            assert.equal(text, 'Created ' + user.id);
 
-            assert.strictEqual(stdOutUser.username, username);
-            assert.strictEqual(stdOutUser.firstname, 'La');
-            assert.strictEqual(stdOutUser.lastname, 'Deeda');
+            assert.equal(stdOutUser.username, username);
+            assert.equal(stdOutUser.firstname, 'La');
+            assert.equal(stdOutUser.lastname, 'Deeda');
 
             done();
           }).catch(done);
@@ -90,14 +90,14 @@ describe('eg users create', () => {
         const stdOutUser = JSON.parse(output);
         return adminHelper.admin.users.info(username)
           .then(user => {
-            assert.strictEqual(user.username, username);
-            assert.strictEqual(user.firstname, 'La');
-            assert.strictEqual(user.lastname, 'Deeda');
-            assert.strictEqual(text, 'Created ' + user.id);
+            assert.equal(user.username, username);
+            assert.equal(user.firstname, 'La');
+            assert.equal(user.lastname, 'Deeda');
+            assert.equal(text, 'Created ' + user.id);
 
-            assert.strictEqual(stdOutUser.username, username);
-            assert.strictEqual(stdOutUser.firstname, 'La');
-            assert.strictEqual(stdOutUser.lastname, 'Deeda');
+            assert.equal(stdOutUser.username, username);
+            assert.equal(stdOutUser.firstname, 'La');
+            assert.equal(stdOutUser.lastname, 'Deeda');
 
             done();
           }).catch(done);
@@ -133,10 +133,10 @@ describe('eg users create', () => {
       generator.once('end', () => {
         return adminHelper.admin.users.info(username)
           .then(user => {
-            assert.strictEqual(user.username, username);
-            assert.strictEqual(user.firstname, 'La');
-            assert.strictEqual(user.lastname, 'Deeda');
-            assert.strictEqual(output, 'Created ' + username);
+            assert.equal(user.username, username);
+            assert.equal(user.firstname, 'La');
+            assert.equal(user.lastname, 'Deeda');
+            assert.equal(output, 'Created ' + username);
             done();
           }).catch(done);
       });
@@ -161,11 +161,11 @@ describe('eg users create', () => {
       generator.once('end', () => {
         return adminHelper.admin.users.info(username)
           .then(user => {
-            assert.strictEqual(user.username, username);
-            assert.strictEqual(user.firstname, 'La');
-            assert.strictEqual(user.lastname, 'Deeda');
+            assert.equal(user.username, username);
+            assert.equal(user.firstname, 'La');
+            assert.equal(user.lastname, 'Deeda');
 
-            assert.strictEqual(output, user.id);
+            assert.equal(output, user.id);
             done();
           });
       });
@@ -202,8 +202,8 @@ describe('eg users create', () => {
       });
 
       generator.once('end', () => {
-        assert.strictEqual(error, 'data should have required property \'username\'');
-        assert.strictEqual(output, null);
+        assert.equal(error, 'data should have required property \'username\'');
+        assert.equal(output, null);
 
         done();
       });
@@ -223,7 +223,7 @@ describe('eg users create', () => {
       });
 
       generator.once('end', () => {
-        assert.strictEqual(error, 'invalid property option: username=');
+        assert.equal(error, 'invalid property option: username=');
         done();
       });
     });

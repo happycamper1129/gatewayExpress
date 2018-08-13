@@ -1,3 +1,4 @@
+require('util.promisify/shim')();
 const { exec } = require('child_process');
 const path = require('path');
 const util = require('util');
