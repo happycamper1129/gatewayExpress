@@ -39,28 +39,21 @@ jobs:
       - EG_DB_EMULATE: false
     steps: *steps
 
-  "release-npm":
+  release:
     docker:
       - image: circleci/node:8
     working_directory: ~/repo
 
     steps:
       - checkout
+      - setup_remote_docker
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
       - run: npm publish
-
-  "release-docker-images":
-    docker:
-      - image: circleci/node:8
-    working_directory: ~/repo
-
-    steps:
-      - run: apk add hub
-      - run: hub clone https://github.com/ExpressGateway/docker-express-gateway.git .
-      - run: npm ci
-      - run: node index.js
-      - run: hub commit -am 'Update Express Gateway Images'
-      - run: hub push
+      - run: "docker build -t expressgateway/express-gateway:${CIRCLE_TAG} --build-arg EG_VERSION=latest ."
+      - run: "docker tag expressgateway/express-gateway:${CIRCLE_TAG} expressgateway/express-gateway:latest"
+      - run: "docker push expressgateway/express-gateway:${CIRCLE_TAG}"
+      - run: "docker push expressgateway/express-gateway:latest"
 
   packer:
     docker:
@@ -82,7 +75,7 @@ workflows:
       - node-8: *testingFilters
       - node-10: *testingFilters
       - node-8-real-redis: *testingFilters
-      - release-npm: &releaseFilters
+      - release: &releaseFilters
           filters:
             tags:
               only: /v\d+(\.\d+){2}/
@@ -93,6 +86,5 @@ workflows:
             - node-8
             - node-8-real-redis
             - node-10
-      - release-docker-images: *releaseFilters
       - packer: *releaseFilters
 
