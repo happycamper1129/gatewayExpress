@@ -34,6 +34,14 @@
           "crypto.createDecipher"
         ]
       }
+    ],
+    "node/no-unsupported-features/node-builtins": [
+      "error",
+      {
+        "ignores": [
+          "util.promisify"
+        ]
+      }
     ]
   },
   "root": true
