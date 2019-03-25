@@ -6,31 +6,41 @@ const credentialService = services.credential;
 const userService = services.user;
 const db = require('../../../lib/db');
 
-describe('Credential tests', () => {
-  const username = 'someUser';
-  const credential = {
-    secret: 'password'
-  };
+describe('Credential service tests', () => {
+  describe('Credential tests', () => {
+    let credential;
+    const username = 'someUser';
 
-  function insertCredential(policy) {
-    return credentialService.insertCredential(username, policy, credential);
-  }
+    before(() => db.flushdb());
 
-  beforeEach(() => db.flushdb());
+    it('should insert a credential', () => {
+      const _credential = {
+        secret: 'password'
+      };
 
-  describe("'oauth2' specific cases", () => {
-    const policy = 'oauth2';
+      return credentialService
+        .insertCredential(username, 'oauth2', _credential)
+        .then((newCredential) => {
+          should.exist(newCredential);
+          credential = Object.assign(newCredential, _credential);
+        });
+    });
 
     it('should not insert a credential that already exists', () => {
-      return insertCredential(policy).then(newCredential => {
-        return should(insertCredential(policy)).be.rejected();
-      });
+      const _credential = {
+        secret: 'password'
+      };
+
+      return should(credentialService.insertCredential(username, 'oauth2', _credential))
+        .be.rejected();
     });
 
     it('should insert a credential without password specified if autoGeneratePassword is set to true', () => {
+      const _credential = {};
+
       return credentialService
-        .insertCredential(username, policy, {})
-        .then(newCredential => {
+        .insertCredential('someUsername', 'oauth2', _credential)
+        .then((newCredential) => {
           should.exist(newCredential);
           should.exist(newCredential.secret);
           should(newCredential.secret.length).greaterThanOrEqual(10);
@@ -38,88 +48,55 @@ describe('Credential tests', () => {
     });
 
     it('should insert a credential with id but different type that already exists', () => {
-      return insertCredential(policy)
-        .then(() => credentialService.insertCredential(username, 'basic-auth', credential))
-        .then(newCredential => {
+      const _credential = {
+        password: 'password'
+      };
+
+      return credentialService
+        .insertCredential(username, 'basic-auth', _credential)
+        .then((newCredential) => {
           should.exist(newCredential);
           newCredential.isActive.should.eql(true);
         });
     });
-  });
 
-  describe('support for multiple credentials', () => {
-    ['key-auth', 'jwt'].forEach(policy => {
-      it(policy, () => {
-        return Promise.all([
-          insertCredential(policy),
-          insertCredential(policy)
-        ])
-          .then(() => credentialService.getCredentials(username))
-          .then(results => {
-            results.should.be.instanceOf(Array).and.have.length(2);
-          });
-      });
+    it('should get a credential', () => {
+      return credentialService
+        .getCredential(username, 'oauth2')
+        .then((cred) => {
+          should.exist(cred);
+          should.not.exist(cred.secret);
+          credential.isActive.should.eql(true);
+        });
+    });
+
+    it('should deactivate a credential', () => {
+      return credentialService
+        .deactivateCredential(username, 'oauth2')
+        .then(() => credentialService.getCredential(username, 'oauth2'))
+        .then((cred) => {
+          should.exist(cred);
+          should.not.exist(cred.secret);
+          cred.isActive.should.eql(false);
+        });
+    });
+
+    it('should reactivate a credential', () => {
+      return credentialService
+        .activateCredential(username, 'oauth2')
+        .then((res) => {
+          should.exist(res);
+
+          return credentialService.getCredential(username, 'oauth2');
+        })
+        .then((cred) => {
+          should.exist(cred);
+          should.not.exist(cred.secret);
+          cred.isActive.should.eql(true);
+        });
     });
   });
 
-  const tests = [
-    { policy: 'oauth2', passwordKey: 'secret' },
-    { policy: 'basic-auth', passwordKey: 'password' },
-    { policy: 'key-auth' },
-    { policy: 'jwt' }
-  ];
-
-  tests.forEach(({ policy, passwordKey }) => {
-    describe(`policy: '${policy}'`, () => {
-      it('should insert a credential', () => {
-        return insertCredential(policy);
-      });
-
-      it("should get a credential and strip 'passwordKey' props", () => {
-        return insertCredential(policy)
-          .then(credential => credentialService.getCredential(credential.id, policy))
-          .then(credential => {
-            should.exist(credential);
-            if (passwordKey) {
-              should.not.exist(credential.passwordKey);
-              should.not.exist(credential[passwordKey]);
-            };
-            credential.isActive.should.eql(true);
-          });
-      });
-
-      it('should deactivate a credential', () => {
-        return insertCredential(policy)
-          .then(credential => {
-            return credentialService.deactivateCredential(credential.id, policy).then(res => {
-              should.exist(res);
-              return credentialService.getCredential(credential.id, policy);
-            });
-          })
-          .then(credential => {
-            should.exist(credential);
-            credential.isActive.should.eql(false);
-          });
-      });
-
-      it('should reactivate a credential', () => {
-        return insertCredential(policy)
-          .then(credential => {
-            return credentialService.activateCredential(credential.id, policy).then(res => {
-              should.exist(res);
-              return credentialService.getCredential(credential.id, policy);
-            });
-          })
-          .then(credential => {
-            should.exist(credential);
-            credential.isActive.should.eql(true);
-          });
-      });
-    });
-  });
-});
-
-describe('Credential service tests', () => {
   describe('Credential Cascade Delete tests', () => {
     let user;
 
