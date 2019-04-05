@@ -224,7 +224,6 @@ describe('User service tests', () => {
       user = createRandomUserObject();
       return userService.insert(user);
     }).then(newUser => {
-      user = newUser; // update test user
       should.exist(newUser);
       user.id = newUser.id;
     }));
