@@ -1,4 +1,4 @@
-const fp = require('find-free-port');
+const net = require('net');
 const express = require('express');
 
 const generateBackendServer = port => {
@@ -19,7 +19,32 @@ const generateBackendServer = port => {
 };
 
 const findOpenPortNumbers = function (count = 1) {
-  return fp(3000, 3100, '127.0.0.1', count);
+  let completeCount = 0;
+  const ports = [];
+  return new Promise((resolve, reject) => {
+    for (let i = 0; i < count; i++) {
+      const server = net.createServer();
+
+      server.listen(0);
+
+      server.on('listening', () => {
+        ports.push(server.address().port);
+
+        server.once('close', () => {
+          completeCount++;
+
+          if (completeCount === count) {
+            resolve(ports);
+          }
+        });
+        server.close();
+      });
+
+      server.on('error', (err) => {
+        reject(err);
+      });
+    }
+  });
 };
 
 module.exports = {

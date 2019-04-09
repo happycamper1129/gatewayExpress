@@ -53,12 +53,11 @@ module.exports.startGatewayInstance = function ({ dirInfo, gatewayConfig, backen
         const gatewayProcess = fork(modulePath, [], {
           cwd: dirInfo.basePath,
           env: childEnv,
-          stdio: 'pipe'
+          stdio: ['pipe', 'pipe', 'pipe', 'ipc']
         });
 
         gatewayProcess.on('error', reject);
-
-        gatewayProcess.stdout.once('data', () => {
+        gatewayProcess.stdout.on('data', () => {
           request
             .get(`http://localhost:${gatewayPort}/not-found`)
             .ok(res => true)
