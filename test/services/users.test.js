@@ -221,9 +221,9 @@ describe('User service tests', () => {
   describe('Activate and deactivate user tests', () => {
     let user;
     before(() => db.flushdb().then(() => {
-      user = createRandomUserObject();
-      return userService.insert(user);
+      return userService.insert(createRandomUserObject());
     }).then(newUser => {
+      user = newUser; // update test user
       should.exist(newUser);
       user.id = newUser.id;
     }));
@@ -325,7 +325,7 @@ describe('User service tests', () => {
   });
 });
 
-function createRandomUserObject () {
+function createRandomUserObject() {
   return {
     username: uuid.v4(),
     firstname: uuid.v4(),
