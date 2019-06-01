@@ -111,7 +111,7 @@ describe('gateway policy schema with plugins', () => {
       ]
     }
     );
-    return should(gateway({
+    return should.throws(() => gateway({
       plugins: {
         policies: [{
           name: 'test-policy-2',
@@ -128,6 +128,6 @@ describe('gateway policy schema with plugins', () => {
         }]
       },
       config
-    })).rejected();
+    }));
   });
 });
